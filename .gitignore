@@ -1,0 +1,17 @@
+# Terraform
+*.tfstate
+*.tfstate.*
+.terraform/
+.terraform.lock.hcl
+crash.log
+*.backup
+
+# Node.js or JS frontend
+node_modules/
+dist/
+.env
+.env.*
+
+# macOS/Linux/Windows OS junk
+.DS_Store
+Thumbs.db
