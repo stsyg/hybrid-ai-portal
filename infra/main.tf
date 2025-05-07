@@ -1,23 +1,12 @@
-// Terraform main file
-provider "azurerm" {
-  features {}
-}
-
+# This resource group is used to contain all the resources for the Hybrid AI Portal
 resource "random_integer" "suffix" {
   min = 1000
   max = 9999
 }
 
 resource "azurerm_resource_group" "main" {
-  name     = var.resource_group_name
+  name     = "${var.project_name}-rg-${random_integer.suffix.result}"
   location = var.location
-}
 
-# Outputs (for debugging/demo)
-output "suffix" {
-  value = random_integer.suffix.result
-}
-
-output "resource_group" {
-  value = azurerm_resource_group.main.name
+  tags = var.default_tags
 }

@@ -2,13 +2,29 @@
 
 A self-hosted LLM web portal powered by Ollama on Azure Arc-enabled K3s.
 
-## Authentication with Azure CLI
+This project uses Terraform to deploy Azure resources, including a resource group and a Static Web App.
+
+### Prerequisites
+
+- [Azure CLI](https://learn.microsoft.com/en-us/cli/azure/install-azure-cli)
+- [Terraform](https://developer.hashicorp.com/terraform/downloads)
+
+### Authentication with Azure CLI
 
 Before deploying any infrastructure, ensure you are authenticated to Azure using the device login flow.
 
-### Step-by-Step
+An Azure **Service Principal** with at least Contributor permissions
+- Export the following environment variables for Terraform to authenticate:
 
-1. Open a terminal and run:
+```bash
+export ARM_CLIENT_ID="<your-client-id>"
+export ARM_CLIENT_SECRET="<your-client-secret>"
+export ARM_SUBSCRIPTION_ID="<your-subscription-id>"
+export ARM_TENANT_ID="<your-tenant-id>"
+```
+// TODO: update steps to create and login with Azure SPN
+
+<!-- 1. Open a terminal and run:
 
 ```sh
 az login --use-device-code
@@ -20,6 +36,33 @@ az login --use-device-code
 
 ```sh
 az account show
+``` -->
+
+## Deploying Infrastructure with Terraform
+
+1. Navigate to the infra/ folder:
+
+```sh
+cd infra
 ```
 
+2. Initialize Terraform:
+
+```sh
+terraform init
+```
+
+3. Preview what will be deployed:
+
+```sh
+terraform plan
+```
+
+4. Apply the infrastructure changes:
+
+```sh
+terraform apply
+```
+
+> Tip: Use -auto-approve to skip the confirmation prompt if you're scripting this.
 
