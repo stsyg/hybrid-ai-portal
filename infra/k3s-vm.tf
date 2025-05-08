@@ -1,3 +1,5 @@
+data "azurerm_client_config" "current" {}
+
 # Pull public key from Key Vault
 data "azurerm_key_vault_secret" "ssh_public_key" {
   name         = azurerm_key_vault_secret.ssh_public_key.name
@@ -39,7 +41,8 @@ resource "azurerm_linux_virtual_machine" "k3s_cp" {
     admin_username   = var.admin_username
     arc_cluster_name = "${var.project_name}-arc-${random_integer.suffix.result}",
     arc_cluster_rg   = azurerm_resource_group.main.name,
-    arc_location     = var.location
+    arc_location     = var.location,
+    subscription_id  = data.azurerm_client_config.current.subscription_id
   }))
 
   admin_ssh_key {
