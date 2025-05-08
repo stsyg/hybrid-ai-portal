@@ -34,10 +34,10 @@ runcmd:
   - sudo -u ${admin_username} mkdir -p /home/${admin_username}/.azure
   - sudo -u ${admin_username} az login --identity
 
-    # Assign Azure Connected Machine Onboarding role to this VM's managed identity
-  - VM_ID=$(curl -H Metadata:true "http://169.254.169.254/metadata/instance/compute/name?api-version=2021-02-01&format=text")
-  - PRINCIPAL_ID=$(az vm show --name $VM_ID --resource-group ${arc_cluster_rg} --query identity.principalId -o tsv)
-  - az role assignment create --assignee "$PRINCIPAL_ID" --role "Azure Connected Machine Onboarding" --scope "/subscriptions/${subscription_id}/resourceGroups/${arc_cluster_rg}"
+  #   # Assign Azure Connected Machine Onboarding role to this VM's managed identity
+  # - VM_ID=$(curl -H Metadata:true "http://169.254.169.254/metadata/instance/compute/name?api-version=2021-02-01&format=text")
+  # - PRINCIPAL_ID=$(az vm show --name $VM_ID --resource-group ${arc_cluster_rg} --query identity.principalId -o tsv)
+  # - az role assignment create --assignee "$PRINCIPAL_ID" --role "Azure Connected Machine Onboarding" --scope "/subscriptions/${subscription_id}/resourceGroups/${arc_cluster_rg}"
 
   # Install required Arc CLI extensions as non-root
   - sudo -u ${admin_username} az extension add --name connectedk8s

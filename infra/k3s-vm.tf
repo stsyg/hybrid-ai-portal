@@ -1,11 +1,20 @@
-data "azurerm_client_config" "current" {}
-
 # Pull public key from Key Vault
 data "azurerm_key_vault_secret" "ssh_public_key" {
   name         = azurerm_key_vault_secret.ssh_public_key.name
   key_vault_id = azurerm_key_vault.main.id
   depends_on   = [azurerm_key_vault_secret.ssh_public_key]
 }
+
+# Assign role to managed identity to unboard the VM
+
+resource "azurerm_role_assignment" "arc_onboarding_cp" {
+  scope                = azurerm_resource_group.main.id
+  role_definition_name = "Azure Connected Machine Onboarding"
+  principal_id         = azurerm_linux_virtual_machine.k3s_cp.identity[0].principal_id
+
+  depends_on = [azurerm_linux_virtual_machine.k3s_cp]
+}
+
 
 # -----------------------------
 # Control Plane NIC
