@@ -22,3 +22,8 @@ runcmd:
   - cp /etc/rancher/k3s/k3s.yaml /home/${admin_username}/.kube/config
   - chown -R ${admin_username}:${admin_username} /home/${admin_username}/.kube
   - chmod 600 /home/${admin_username}/.kube/config
+  - az extension add --name connectedk8s
+  - az extension add --name k8s-configuration
+  - az extension add --name k8s-extension
+  - az extension add --name customlocation
+  - az connectedk8s connect --name ${arc_cluster_name} --resource-group ${arc_cluster_rg} --location ${arc_location} --tags Role="K3s-Arc"

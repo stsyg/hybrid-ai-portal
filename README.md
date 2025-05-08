@@ -8,6 +8,7 @@ This project uses Terraform to deploy Azure resources, including a resource grou
 
 - [Azure CLI](https://learn.microsoft.com/en-us/cli/azure/install-azure-cli)
 - [Terraform](https://developer.hashicorp.com/terraform/downloads)
+- Extension
 
 ### Authentication with Azure CLI
 
@@ -37,6 +38,30 @@ az login --use-device-code
 ```sh
 az account show
 ``` -->
+
+### Install Terraform
+// TODO: add steps how to install TF on Windows and WSL/Linux
+
+### Install Azure Providers and Extensions
+
+```sh
+az provider register --namespace Microsoft.Kubernetes
+az provider register --namespace Microsoft.KubernetesConfiguration
+az provider register --namespace Microsoft.ExtendedLocation
+
+az extension add --name connectedk8s
+az extension add --name k8s-configuration
+```
+
+You can monitor the registration process with the following commands:
+
+```sh
+az provider show -n Microsoft.Kubernetes -o table
+az provider show -n Microsoft.KubernetesConfiguration -o table
+az provider show -n Microsoft.ExtendedLocation -o table
+```
+
+
 
 ## Deploying Infrastructure with Terraform
 

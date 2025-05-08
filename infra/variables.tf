@@ -1,22 +1,26 @@
 variable "project_name" {
-  default = "js-haip"
+  description = "Base project name used for all resources"
+  type        = string
 }
 
 variable "location" {
-  default = "canadacentral"
+  description = "Azure region for all resources"
+  type        = string
 }
 
 variable "vm_size" {
-  default = "Standard_B2s"
+  description = "VM size for all K3s nodes"
+  type        = string
 }
 
 variable "admin_username" {
-  default = "azureuser"
+  description = "Default admin username for VMs"
+  type        = string
 }
 
 variable "worker_count" {
-  type    = number
-  default = 1
+  description = "Number of K3s worker nodes"
+  type        = number
 }
 
 variable "default_tags" {
@@ -28,19 +32,22 @@ variable "default_tags" {
   }
 }
 
-variable "kv_name" {
-  description = "Name of the Azure Key Vault"
-  default     = "js-haip-kv"
-}
+# variable "kv_name" {
+#   description = "Name of the Azure Key Vault"
+#   type        = string
+# }
 
 variable "enable_bastion" {
   description = "Enable Azure Bastion host"
   type        = bool
-  default     = true
 }
 
 variable "bastion_sku" {
   description = "Bastion SKU. Valid: Developer, Basic, Standard, Premium"
   type        = string
-  default     = "Basic"
 }
+
+# variable "arc_cluster_name" {
+#   description = "Name of Azure Arc-enabled Kubernetes cluster"
+#   type        = string
+# }

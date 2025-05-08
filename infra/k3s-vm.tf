@@ -32,12 +32,14 @@ resource "azurerm_linux_virtual_machine" "k3s_cp" {
   size                            = var.vm_size
   admin_username                  = var.admin_username
   disable_password_authentication = true
-
-  network_interface_ids = [azurerm_network_interface.k3s_cp.id]
+  network_interface_ids           = [azurerm_network_interface.k3s_cp.id]
 
   custom_data = base64encode(templatefile("${path.module}/cloud-init-controlplane.tpl", {
-    kv_name        = azurerm_key_vault.main.name,
-    admin_username = var.admin_username
+    kv_name          = azurerm_key_vault.main.name,
+    admin_username   = var.admin_username
+    arc_cluster_name = "${var.project_name}-arc-${random_integer.suffix.result}",
+    arc_cluster_rg   = azurerm_resource_group.main.name,
+    arc_location     = var.location
   }))
 
   admin_ssh_key {
@@ -99,8 +101,7 @@ resource "azurerm_linux_virtual_machine" "k3s_worker" {
   size                            = var.vm_size
   admin_username                  = var.admin_username
   disable_password_authentication = true
-
-  network_interface_ids = [azurerm_network_interface.k3s_worker[count.index].id]
+  network_interface_ids           = [azurerm_network_interface.k3s_worker[count.index].id]
 
   custom_data = base64encode(templatefile("${path.module}/cloud-init-worker.tpl", {
     kv_name = azurerm_key_vault.main.name,
