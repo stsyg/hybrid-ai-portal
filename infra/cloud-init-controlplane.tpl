@@ -43,6 +43,9 @@ runcmd:
   # Onboard to Azure Arc using managed identity
   - sudo -u ${admin_username} az connectedk8s connect --name ${arc_cluster_name} --resource-group ${arc_cluster_rg} --location ${arc_location} --tags Role="K3s-Arc"
 
+  # Create aliases
+  - sudo -u ${admin_username} alias k="kubectl"
+
   # --- Arc Portal Bearer Token Setup ---
   # Create Service Account
   - kubectl create serviceaccount arc-admin -n kube-system

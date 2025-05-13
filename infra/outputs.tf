@@ -18,3 +18,8 @@ output "acr_admin_password" {
   value     = azurerm_container_registry.ollama.admin_password
   sensitive = true
 }
+
+output "kv_name" {
+  description = "The name of the Key Vault"
+  value       = azurerm_key_vault.main.name
+}
