@@ -1,5 +1,15 @@
 # Hybrid AI Portal aka HAIP
 
+-------------------------------------------------
+##################################
+# List of things to improve
+##################################
+
+// TODO: describe how to connect to arc enabled k3s via Arc cluster connect https://learn.microsoft.com/en-us/azure/azure-arc/kubernetes/cluster-connect?tabs=azure-cli
+
+-------------------------------------------------
+
+
 A self-hosted LLM web portal powered by Ollama on Azure Arc-enabled K3s.
 
 This project uses Terraform to deploy Azure resources, including a resource group and a Static Web App.
@@ -91,8 +101,16 @@ terraform apply
 
 > Tip: Use -auto-approve to skip the confirmation prompt if you're scripting this.
 
-##################################
-# List of things to improve
-##################################
+## Docker Image build and upload
 
-// TODO: describe how to connect to arc enabled k3s via Arc cluster connect https://learn.microsoft.com/en-us/azure/azure-arc/kubernetes/cluster-connect?tabs=azure-cli
+# grab your KV and ACR
+KV=$(terraform output -raw kv_name)
+ACR=$(terraform output -raw acr_login_server)
+
+# pull credentials from KV
+USER=$(az keyvault secret show --vault-name $KV --name acr-admin-username --query value -o tsv)
+PASS=$(az keyvault secret show --vault-name $KV --name acr-admin-password --query value -o tsv)
+
+docker login $ACR -u $USER -p $PASS
+docker build -t $ACR/ollama-api:latest ./ollama-api
+docker push $ACR/ollama-api:latest
