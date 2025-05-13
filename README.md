@@ -91,3 +91,8 @@ terraform apply
 
 > Tip: Use -auto-approve to skip the confirmation prompt if you're scripting this.
 
+##################################
+# List of things to improve
+##################################
+
+// TODO: describe how to connect to arc enabled k3s via Arc cluster connect https://learn.microsoft.com/en-us/azure/azure-arc/kubernetes/cluster-connect?tabs=azure-cli

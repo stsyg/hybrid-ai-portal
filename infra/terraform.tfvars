@@ -6,3 +6,4 @@ worker_count   = 0
 # arc_cluster_name = "js-haip-arc-cluster"
 enable_bastion = true
 bastion_sku    = "Basic"
+acr_sku        = "Basic"

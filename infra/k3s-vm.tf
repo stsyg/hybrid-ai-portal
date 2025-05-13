@@ -9,12 +9,10 @@ data "azurerm_key_vault_secret" "ssh_public_key" {
 
 resource "azurerm_role_assignment" "arc_onboarding_cp" {
   scope                = azurerm_resource_group.main.id
-  role_definition_name = "Azure Connected Machine Onboarding"
-  principal_id         = azurerm_linux_virtual_machine.k3s_cp.identity[0].principal_id
+  role_definition_name = "Kubernetes Cluster - Azure Arc Onboarding"
+  principal_id         = azurerm_user_assigned_identity.k3s_cp.principal_id
 
-  depends_on = [azurerm_linux_virtual_machine.k3s_cp]
 }
-
 
 # -----------------------------
 # Control Plane NIC
@@ -80,8 +78,21 @@ resource "azurerm_linux_virtual_machine" "k3s_cp" {
 
   depends_on = [
     azurerm_key_vault_secret.ssh_public_key,
-    azurerm_role_assignment.keyvault_access_cp
+    azurerm_role_assignment.keyvault_access_cp,
+    azurerm_role_assignment.arc_onboarding_cp
   ]
+
+  lifecycle {
+    ignore_changes = [
+      # Don’t force a rebuild when your cloud-init (custom_data) changes
+      # custom_data,
+
+      # Ignore these provider-driven defaults too
+      patch_assessment_mode,
+      patch_mode,
+      bypass_platform_safety_checks_on_user_schedule_enabled,
+    ]
+  }
 }
 
 # -----------------------------

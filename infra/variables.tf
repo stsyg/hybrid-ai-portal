@@ -51,3 +51,9 @@ variable "bastion_sku" {
 #   description = "Name of Azure Arc-enabled Kubernetes cluster"
 #   type        = string
 # }
+
+variable "acr_sku" {
+  description = "SKU for Azure Container Registry"
+  type        = string
+  default     = "Basic"
+}

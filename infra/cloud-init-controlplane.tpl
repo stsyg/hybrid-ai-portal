@@ -34,11 +34,6 @@ runcmd:
   - sudo -u ${admin_username} mkdir -p /home/${admin_username}/.azure
   - sudo -u ${admin_username} az login --identity
 
-  #   # Assign Azure Connected Machine Onboarding role to this VM's managed identity
-  # - VM_ID=$(curl -H Metadata:true "http://169.254.169.254/metadata/instance/compute/name?api-version=2021-02-01&format=text")
-  # - PRINCIPAL_ID=$(az vm show --name $VM_ID --resource-group ${arc_cluster_rg} --query identity.principalId -o tsv)
-  # - az role assignment create --assignee "$PRINCIPAL_ID" --role "Azure Connected Machine Onboarding" --scope "/subscriptions/${subscription_id}/resourceGroups/${arc_cluster_rg}"
-
   # Install required Arc CLI extensions as non-root
   - sudo -u ${admin_username} az extension add --name connectedk8s
   - sudo -u ${admin_username} az extension add --name k8s-configuration
@@ -47,3 +42,28 @@ runcmd:
 
   # Onboard to Azure Arc using managed identity
   - sudo -u ${admin_username} az connectedk8s connect --name ${arc_cluster_name} --resource-group ${arc_cluster_rg} --location ${arc_location} --tags Role="K3s-Arc"
+
+  # --- Arc Portal Bearer Token Setup ---
+  # Create Service Account
+  - kubectl create serviceaccount arc-admin -n kube-system
+
+  # Create a ClusterRoleBinding
+  - kubectl create clusterrolebinding arc-admin-binding --clusterrole cluster-admin --serviceaccount kube-system:arc-admin
+
+  # Create Secret for the token
+  - |
+    cat <<EOF | kubectl apply -f -
+    apiVersion: v1
+    kind: Secret
+    metadata:
+      name: arc-admin-token
+      namespace: kube-system
+      annotations:
+        kubernetes.io/service-account.name: arc-admin
+    type: kubernetes.io/service-account-token
+    EOF
+
+  # Wait and extract token, store to Key Vault
+  - sleep 10
+  - TOKEN=$(kubectl -n kube-system get secret arc-admin-token -o jsonpath="{.data.token}" | base64 --decode)
+  - az keyvault secret set --vault-name ${kv_name} --name arc-admin-bearer-token --value "$TOKEN"

@@ -46,3 +46,12 @@ resource "azurerm_role_assignment" "keyvault_access_worker" {
   scope                = azurerm_key_vault.main.id
 }
 
+# data "azurerm_key_vault_secret" "arc_ui_token" {
+#   name         = "arc-ui-bearer-token"
+#   key_vault_id = azurerm_key_vault.main.id
+# }
+
+# output "arc_ui_bearer_token" {
+#   value     = data.azurerm_key_vault_secret.arc_ui_token.value
+#   sensitive = true
+# }
