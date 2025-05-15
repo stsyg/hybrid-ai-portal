@@ -54,6 +54,7 @@
                 "GitHub.copilot-chat",
                 "ms-vscode.vscode-node-azure-pack",
                 "ms-azuretools.vscode-containers",
+                "ms-vscode-remote.remote-containers",
                 "solomonkinard.todos"
             ]
         }
