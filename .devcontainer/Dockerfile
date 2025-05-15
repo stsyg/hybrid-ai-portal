@@ -20,6 +20,7 @@ RUN apt-get update && export DEBIAN_FRONTEND=noninteractive \
        graphviz \
        build-essential \
        zsh-completions \
+       git \
     && apt-get clean -y && rm -rf /var/lib/apt/lists/*
 
 # [Option] Install Azure CLI
