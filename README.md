@@ -18,6 +18,8 @@ This project uses Terraform to deploy Azure resources, including a resource grou
 
 - [Azure CLI](https://learn.microsoft.com/en-us/cli/azure/install-azure-cli)
 - [Terraform](https://developer.hashicorp.com/terraform/downloads)
+- Docker and docker compose
+- kubectl
 - Extension
 
 ### Authentication with Azure CLI
@@ -104,13 +106,56 @@ terraform apply
 ## Docker Image build and upload
 
 # grab your KV and ACR
+
+```sh
 KV=$(terraform output -raw kv_name)
-ACR=$(terraform output -raw acr_login_server)
+ACR_SERVER=$(terraform output -raw acr_login_server)
+```
 
 # pull credentials from KV
-USER=$(az keyvault secret show --vault-name $KV --name acr-admin-username --query value -o tsv)
-PASS=$(az keyvault secret show --vault-name $KV --name acr-admin-password --query value -o tsv)
 
-docker login $ACR -u $USER -p $PASS
-docker build -t $ACR/ollama-api:latest ./ollama-api
-docker push $ACR/ollama-api:latest
+```sh
+ACR_USER=$(az keyvault secret show --vault-name $KV --name acr-admin-username --query value -o tsv)
+ACR_PASS=$(az keyvault secret show --vault-name $KV --name acr-admin-password --query value -o tsv)
+```
+
+
+Option #1. Download and build image locally and push it to ACR
+
+# if you’re currently in infra/
+
+```sh
+cd ..
+```
+
+# authenticate with Azure Container Registry, build image and push it to ACR
+
+```sh
+echo "$ACR_PASS" | docker login $ACR_SERVER --username "$ACR_USER" --password-stdin
+docker build -t $ACR_SERVER/ollama-api:latest ./ollama-api
+docker push $ACR_SERVER/ollama-api:latest
+```
+
+
+Option #2. Importing the upstream image straight into ACR
+
+```sh
+az acr import \
+  --name $ACR_SERVER \
+  --source docker.io/ollama/ollama-api:latest \
+  --image ollama-api:latest
+```
+
+After that you can docker pull jshaipacr7401.azurecr.io/ollama-api:latest (from anywhere with network access) without rebuilding locally.
+
+
+### Building Ollama deployment
+
+ACR_ID=$(terraform output -raw acr_id)
+PRINCIPAL_ID=$(terraform output -raw k3s_cp_principal_id)
+
+# grant pull rights:
+az role assignment create \
+  --assignee $PRINCIPAL_ID \
+  --role     AcrPull \
+  --scope    $ACR_ID

@@ -1,1 +1,14 @@
 # Kubernetes Service YAML
+apiVersion: v1
+kind: Service
+metadata:
+  name: ollama-api
+  namespace: default
+spec:
+  selector:
+    app: ollama-api
+  ports:
+    - name: http
+      protocol: TCP
+      port: 80
+      targetPort: 11434

@@ -49,7 +49,8 @@ resource "azurerm_linux_virtual_machine" "k3s_cp" {
     arc_cluster_name = "${var.project_name}-arc-${random_integer.suffix.result}",
     arc_cluster_rg   = azurerm_resource_group.main.name,
     arc_location     = var.location,
-    subscription_id  = data.azurerm_client_config.current.subscription_id
+    subscription_id  = data.azurerm_client_config.current.subscription_id,
+    acr_name         = azurerm_container_registry.ollama.name
   }))
 
   admin_ssh_key {
