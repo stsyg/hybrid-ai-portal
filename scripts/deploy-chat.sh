@@ -1,6 +1,7 @@
 #!/bin/bash
 
 # Build and deploy Ollama Chat Interface
+# Builds, pushes, and deploys the Ollama Chat UI Docker image to Kubernetes
 # This script builds the chat UI Docker image, pushes it to ACR, and deploys it to Kubernetes.
 # Usage: ./deploy-chat.sh
 

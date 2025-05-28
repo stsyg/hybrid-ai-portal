@@ -1,5 +1,7 @@
 #!/bin/bash
 
+# Updates Kubernetes manifests with the correct ACR image for Ollama API
+
 # Script to update Kubernetes manifests with correct ACR image
 set -e
 

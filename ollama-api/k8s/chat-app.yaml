@@ -1,3 +1,4 @@
+# Deployment and Service for Ollama Chat UI (web frontend for LLM chat)
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -53,31 +54,3 @@ spec:
   - protocol: TCP
     port: 80
     targetPort: 80
----
-apiVersion: networking.k8s.io/v1
-kind: Ingress
-metadata:
-  name: ollama-chat
-  annotations:
-    nginx.ingress.kubernetes.io/rewrite-target: /
-spec:
-  rules:
-  - host: ollama.local
-    http:
-      paths:
-      - path: /chat
-        pathType: Prefix
-        backend:
-          service:
-            name: ollama-chat
-            port:
-              number: 80
-  - http:
-      paths:
-      - path: /chat
-        pathType: Prefix
-        backend:
-          service:
-            name: ollama-chat
-            port:
-              number: 80

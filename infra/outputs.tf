@@ -1,3 +1,5 @@
+# Terraform outputs for resource names, IPs, and credentials
+
 output "control_plane_ip" {
   value = azurerm_network_interface.k3s_cp.private_ip_address
 }

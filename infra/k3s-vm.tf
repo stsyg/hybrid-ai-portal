@@ -1,3 +1,5 @@
+# K3s VM, NIC, and Arc onboarding for control plane and workers
+
 # Pull public key from Key Vault
 data "azurerm_key_vault_secret" "ssh_public_key" {
   name         = azurerm_key_vault_secret.ssh_public_key.name

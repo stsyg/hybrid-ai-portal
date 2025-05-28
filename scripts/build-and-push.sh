@@ -1,6 +1,7 @@
 #!/bin/bash
 
 # Script to build and push Ollama API image to ACR
+# Builds and pushes the Ollama API Docker image to Azure Container Registry (ACR)
 # Usage: ./build-and-push.sh
 # This script logs into ACR, builds the Ollama API Docker image, and pushes it to ACR.
 

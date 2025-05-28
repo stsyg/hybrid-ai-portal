@@ -1,3 +1,5 @@
+# Azure Bastion host and related resources for secure VM access
+
 resource "azurerm_public_ip" "bastion" {
   count               = var.enable_bastion && var.bastion_sku != "Developer" ? 1 : 0
   name                = "${var.project_name}-bastion-ip-${random_integer.suffix.result}"

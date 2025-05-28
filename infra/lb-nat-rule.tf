@@ -1,3 +1,5 @@
+# Azure Load Balancer and NAT rules for exposing K3s Traefik
+
 # Azure Load Balancer and NAT rule for K3s Traefik HTTP
 resource "azurerm_lb" "k3s_public" {
   name                = "${var.project_name}-k3s-lb"

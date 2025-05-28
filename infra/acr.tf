@@ -1,3 +1,5 @@
+# Azure Container Registry and ACR secrets for Ollama API
+
 resource "azurerm_container_registry" "ollama" {
   name                = "${replace(var.project_name, "-", "")}acr${random_integer.suffix.result}"
   resource_group_name = azurerm_resource_group.main.name

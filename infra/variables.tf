@@ -1,3 +1,5 @@
+# Input variables for project configuration
+
 variable "project_name" {
   description = "Base project name used for all resources"
   type        = string

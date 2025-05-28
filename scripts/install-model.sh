@@ -1,6 +1,7 @@
 #!/bin/bash
 
 # Script to install a model in the running Ollama instance
+# Installs a specified LLM model into the running Ollama pod in Kubernetes
 # Usage: ./install-model.sh [model_name]
 # Default: llama3.2:1b
 # This script finds the Ollama pod and pulls the specified model into it.

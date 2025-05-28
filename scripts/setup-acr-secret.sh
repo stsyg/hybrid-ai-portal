@@ -3,6 +3,7 @@
 # Script to create ACR pull secret in Kubernetes
 # Usage: ./setup-acr-secret.sh
 # This script retrieves ACR credentials from Azure Key Vault and creates a Kubernetes secret for image pulls.
+# Creates a Kubernetes secret for pulling images from Azure Container Registry (ACR)
 
 set -e
 

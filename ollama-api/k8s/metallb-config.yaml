@@ -1,3 +1,5 @@
+# MetalLB IP pool and L2 advertisement for Traefik LoadBalancer
+# Only apply this config after MetalLB is installed in the cluster.
 apiVersion: metallb.io/v1beta1
 kind: IPAddressPool
 metadata:

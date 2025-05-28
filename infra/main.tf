@@ -1,3 +1,4 @@
+# Main entry for resource group and random suffix for resource uniqueness
 # This resource group is used to contain all the resources for the Hybrid AI Portal
 resource "random_integer" "suffix" {
   min = 1000

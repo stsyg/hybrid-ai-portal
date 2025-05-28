@@ -1,3 +1,4 @@
+# ClusterIP Service for Ollama API (internal access for Ingress)
 # Kubernetes Service YAML
 apiVersion: v1
 kind: Service
@@ -13,3 +14,4 @@ spec:
       protocol: TCP
       port: 80
       targetPort: 11434
+      # Exposes port 80 for Ingress to route to Ollama API (targetPort 11434)

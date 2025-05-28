@@ -1,3 +1,5 @@
+# SSH key generation and storage in Azure Key Vault
+
 # Generate SSH key pair locally
 resource "null_resource" "generate_ssh_key" {
   provisioner "local-exec" {

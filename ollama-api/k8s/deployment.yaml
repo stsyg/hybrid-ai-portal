@@ -1,3 +1,4 @@
+# Deployment for Ollama API (serves LLM models via REST API)
 # Kubernetes Deployment YAML
 apiVersion: apps/v1
 kind: Deployment
@@ -20,6 +21,7 @@ spec:
         - name: acr-pull-secret     # ← tell K3s where to get creds
       containers:
       - name: ollama-api
+        # Set the image to your ACR repo after build-and-push.sh
         image: jshaipacr2508.azurecr.io/ollama-api:latest
         imagePullPolicy: Always
         command: ["/bin/ollama"]

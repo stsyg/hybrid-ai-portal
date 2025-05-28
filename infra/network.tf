@@ -1,3 +1,5 @@
+# Virtual Network, Subnet, and NSG for K3s cluster
+
 # VNet, Subnet, NSG, and Associations
 resource "azurerm_virtual_network" "main" {
   name                = "${var.project_name}-vnet-${random_integer.suffix.result}"
