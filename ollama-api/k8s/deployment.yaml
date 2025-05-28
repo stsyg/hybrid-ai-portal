@@ -4,6 +4,8 @@ kind: Deployment
 metadata:
   name: ollama-api
   namespace: default
+  labels:
+    app: ollama-api
 spec:
   replicas: 1
   selector:
@@ -18,7 +20,32 @@ spec:
         - name: acr-pull-secret     # ← tell K3s where to get creds
       containers:
       - name: ollama-api
-        image: jshaipacr7401.azurecr.io/ollama-api:latest
-        imagePullPolicy: IfNotPresent
+        image: jshaipacr2508.azurecr.io/ollama-api:latest
+        imagePullPolicy: Always
+        command: ["/bin/ollama"]
+        args: ["serve"]
         ports:
         - containerPort: 11434
+          name: http
+        env:
+        - name: OLLAMA_HOST
+          value: "0.0.0.0:11434"
+        resources:
+          requests:
+            memory: "1Gi"
+            cpu: "500m"
+          limits:
+            memory: "4Gi"
+            cpu: "2"
+        readinessProbe:
+          httpGet:
+            path: /api/tags
+            port: 11434
+          initialDelaySeconds: 30
+          periodSeconds: 10
+        livenessProbe:
+          httpGet:
+            path: /api/tags
+            port: 11434
+          initialDelaySeconds: 60
+          periodSeconds: 30

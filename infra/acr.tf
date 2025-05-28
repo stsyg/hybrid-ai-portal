@@ -15,7 +15,10 @@ resource "azurerm_key_vault_secret" "acr_admin_username" {
   value        = azurerm_container_registry.ollama.admin_username
   key_vault_id = azurerm_key_vault.main.id
 
-  depends_on = [azurerm_container_registry.ollama]
+  depends_on = [
+    azurerm_container_registry.ollama,
+    time_sleep.wait_for_keyvault_rbac
+  ]
 }
 
 resource "azurerm_key_vault_secret" "acr_admin_password" {
@@ -23,7 +26,10 @@ resource "azurerm_key_vault_secret" "acr_admin_password" {
   value        = azurerm_container_registry.ollama.admin_password
   key_vault_id = azurerm_key_vault.main.id
 
-  depends_on = [azurerm_container_registry.ollama]
+  depends_on = [
+    azurerm_container_registry.ollama,
+    time_sleep.wait_for_keyvault_rbac
+  ]
 }
 
 // Grant your control-plane UAI the AcrPull role on the ACR

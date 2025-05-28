@@ -17,33 +17,100 @@ resource "azurerm_subnet" "main" {
   depends_on = [azurerm_virtual_network.main]
 }
 
+resource "azurerm_subnet_network_security_group_association" "k3s_subnet" {
+  subnet_id                 = azurerm_subnet.main.id
+  network_security_group_id = azurerm_network_security_group.k3s.id
+}
+
 resource "azurerm_network_security_group" "k3s" {
   name                = "${var.project_name}-nsg-${random_integer.suffix.result}"
   location            = var.location
   resource_group_name = azurerm_resource_group.main.name
 
+  # security_rule {
+  #   name                       = "AllowInternalSSH"
+  #   priority                   = 100
+  #   direction                  = "Inbound"
+  #   access                     = "Allow"
+  #   protocol                   = "Tcp"
+  #   source_address_prefix      = "10.0.0.0/16"
+  #   destination_address_prefix = "*"
+  #   destination_port_range     = "22"
+  #   source_port_range          = "*"
+  # }
+
   security_rule {
-    name                       = "AllowInternalSSH"
-    priority                   = 100
+    name                       = "AllowHTTP"
+    priority                   = 200
     direction                  = "Inbound"
     access                     = "Allow"
     protocol                   = "Tcp"
-    source_address_prefix      = "10.0.0.0/16"
+    source_address_prefix      = "*"
     destination_address_prefix = "*"
-    destination_port_range     = "22"
+    destination_port_range     = "80"
     source_port_range          = "*"
   }
+
+  security_rule {
+    name                       = "AllowLB30090"
+    priority                   = 210
+    direction                  = "Inbound"
+    access                     = "Allow"
+    protocol                   = "Tcp"
+    source_address_prefix      = "AzureLoadBalancer"
+    destination_address_prefix = "*"
+    destination_port_range     = "30090"
+    source_port_range          = "*"
+  }
+
+  security_rule {
+    name                       = "AllowHTTPS"
+    priority                   = 300
+    direction                  = "Inbound"
+    access                     = "Allow"
+    protocol                   = "Tcp"
+    source_address_prefix      = "*"
+    destination_address_prefix = "*"
+    destination_port_range     = "443"
+    source_port_range          = "*"
+  }
+
+  security_rule {
+    name                       = "AllowNodePorts"
+    priority                   = 400
+    direction                  = "Inbound"
+    access                     = "Allow"
+    protocol                   = "Tcp"
+    source_address_prefix      = "*"
+    destination_address_prefix = "*"
+    destination_port_range     = "30000-32767"
+    source_port_range          = "*"
+  }
+
+  # security_rule {
+  #   name                       = "AllowSSH"
+  #   priority                   = 500
+  #   direction                  = "Inbound"
+  #   access                     = "Allow"
+  #   protocol                   = "Tcp"
+  #   source_address_prefix      = "*"
+  #   destination_address_prefix = "*"
+  #   destination_port_range     = "22"
+  #   source_port_range          = "*"
+  # }
 
   tags = merge(var.default_tags, { Role = "K3s Network NSG" })
 }
 
-resource "azurerm_network_interface_security_group_association" "k3s_cp" {
-  network_interface_id      = azurerm_network_interface.k3s_cp.id
-  network_security_group_id = azurerm_network_security_group.k3s.id
-}
+# -----------------------------
+# Load Balancer Public IP
+# -----------------------------
+resource "azurerm_public_ip" "k3s_cp" {
+  name                = "${var.project_name}-k3s-cp-ip-${random_integer.suffix.result}"
+  location            = var.location
+  resource_group_name = azurerm_resource_group.main.name
+  allocation_method   = "Static"
+  sku                 = "Standard"
 
-resource "azurerm_network_interface_security_group_association" "k3s_worker" {
-  count                     = var.worker_count
-  network_interface_id      = azurerm_network_interface.k3s_worker[count.index].id
-  network_security_group_id = azurerm_network_security_group.k3s.id
+  tags = merge(var.default_tags, { Role = "K3s-Control-Plane-PublicIP" })
 }

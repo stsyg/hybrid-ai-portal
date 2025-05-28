@@ -26,6 +26,7 @@ resource "azurerm_network_interface" "k3s_cp" {
     name                          = "internal"
     subnet_id                     = azurerm_subnet.main.id
     private_ip_address_allocation = "Dynamic"
+    # public_ip_address_id removed for Azure LB usage
   }
 
   tags = merge(var.default_tags, { Role = "K3s-Control-Plane" })

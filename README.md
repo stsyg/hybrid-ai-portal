@@ -7,6 +7,27 @@
 
 // TODO: describe how to connect to arc enabled k3s via Arc cluster connect https://learn.microsoft.com/en-us/azure/azure-arc/kubernetes/cluster-connect?tabs=azure-cli
 
+run this after tf code is completed successfully. 
+
+CLUSTER_NAME=js-haip-arc-2508
+RESOURCE_GROUP=js-haip-rg-2508
+
+ARM_ID_CLUSTER=$(az connectedk8s show -n $CLUSTER_NAME -g $RESOURCE_GROUP --query id -o tsv)
+
+KV=$(terraform output -raw kv_name)
+
+TOKEN=$(az keyvault secret show \
+  --vault-name $KV \
+  --name arc-admin-bearer-token \
+  --query value \
+  -o tsv)
+
+az connectedk8s proxy -n $CLUSTER_NAME -g $RESOURCE_GROUP --token $TOKEN
+
+open another terminal on the same local host and run  following:
+
+kubectl get nodes
+
 -------------------------------------------------
 
 
@@ -30,10 +51,10 @@ An Azure **Service Principal** with at least Contributor permissions
 - Export the following environment variables for Terraform to authenticate:
 
 ```bash
-export ARM_CLIENT_ID="<your-client-id>"
-export ARM_CLIENT_SECRET="<your-client-secret>"
+# export ARM_CLIENT_ID="<your-client-id>"
+# export ARM_CLIENT_SECRET="<your-client-secret>"
 export ARM_SUBSCRIPTION_ID="<your-subscription-id>"
-export ARM_TENANT_ID="<your-tenant-id>"
+# export ARM_TENANT_ID="<your-tenant-id>"
 ```
 // TODO: update steps to create and login with Azure SPN
 
@@ -159,3 +180,27 @@ az role assignment create \
   --assignee $PRINCIPAL_ID \
   --role     AcrPull \
   --scope    $ACR_ID
+
+## One-step deployment (recommended)
+
+After provisioning infrastructure and building/pushing images, you can deploy Ollama API, chat UI, and install the default LLM model (llama3.2:1b) in one step:
+
+```sh
+./deploy-ollama.sh
+```
+
+This script will:
+- Update manifests
+- Build and push the Ollama API image
+- Set up the ACR pull secret
+- Deploy Ollama API and chat UI to Kubernetes
+- Wait for deployments to be ready
+- Install the default LLM model (llama3.2:1b) so it is available in the chat UI and API
+
+After completion, you can access:
+- Chat UI: `http://<public-ip>/chat`
+- Ollama API: `http://<public-ip>/api/tags` (should list `llama3.2:1b`)
+
+## Removing unused scripts
+
+The file `ollama-api/run.sh` is not used in the deployment workflow and can be deleted.

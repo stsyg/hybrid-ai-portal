@@ -31,6 +31,12 @@ resource "azurerm_role_assignment" "keyvault_access_for_tf" {
   scope                = azurerm_key_vault.main.id
 }
 
+# Wait for role assignment to propagate
+resource "time_sleep" "wait_for_keyvault_rbac" {
+  depends_on = [azurerm_role_assignment.keyvault_access_for_tf]
+  create_duration = "60s"
+}
+
 # Allow control plane VM to read/write secrets
 resource "azurerm_role_assignment" "keyvault_access_cp" {
   principal_id         = azurerm_user_assigned_identity.k3s_cp.principal_id

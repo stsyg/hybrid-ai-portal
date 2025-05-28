@@ -32,7 +32,7 @@ resource "azurerm_key_vault_secret" "ssh_public_key" {
 
   depends_on = [
     azurerm_key_vault.main,
-    azurerm_role_assignment.keyvault_access_for_tf,
+    time_sleep.wait_for_keyvault_rbac,
     null_resource.generate_ssh_key
   ]
 }
@@ -45,7 +45,7 @@ resource "azurerm_key_vault_secret" "ssh_private_key" {
 
   depends_on = [
     azurerm_key_vault.main,
-    azurerm_role_assignment.keyvault_access_for_tf,
+    time_sleep.wait_for_keyvault_rbac,
     null_resource.generate_ssh_key
   ]
 }

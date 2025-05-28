@@ -5,6 +5,7 @@ metadata:
   name: ollama-api
   namespace: default
 spec:
+  type: ClusterIP
   selector:
     app: ollama-api
   ports:

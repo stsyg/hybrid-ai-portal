@@ -2,6 +2,11 @@ output "control_plane_ip" {
   value = azurerm_network_interface.k3s_cp.private_ip_address
 }
 
+output "control_plane_public_ip" {
+  description = "The public IP address of the control plane VM"
+  value       = azurerm_public_ip.k3s_cp.ip_address
+}
+
 output "worker_ips" {
   value = [for nic in azurerm_network_interface.k3s_worker : nic.private_ip_address]
 }
