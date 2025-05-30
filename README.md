@@ -4,30 +4,61 @@ A fully automated, cloud-native LLM web portal powered by Ollama and a web chat 
 
 ---
 
+## 📦 Prerequisites
+
+To run the deployment scripts, you need:
+- **WSL or Linux** (for Bash script execution)
+- **Docker Engine** (or Docker Desktop) to build Ollama API and chat images
+- **VS Code** (recommended, but any IDE is fine)
+- **Azure Subscription** (all resources will be deployed here)
+- **kubectl** (optional, to check K8s resources from your laptop after deployment)
+- **Web browser** (e.g., Chrome) to interact with the Ollama chat UI
+- **Azure CLI** (authenticate using device code: `az login --use-device-code` is the simplest)
+- **Terraform**
+- **Git**
+
+---
+
 ## 🚀 Quick Start
 
-```bash
-# Deploy all infrastructure and apps
-./deploy-ollama.sh all
+1. **Clone the repository and move to the project folder:**
+   ```bash
+   git clone <your-repo-url>
+   cd hybrid-ai-portal
+   ```
+2. **Authenticate with Azure:**
+   ```bash
+   az login --use-device-code
+   ```
+3. **Deploy everything (infra + app):**
+   ```bash
+   ./deploy-ollama.sh all
+   ```
+   - End-to-end deployment may take up to 30 minutes, depending on your internet connectivity (Docker images are built and pushed to ACR).
 
-# Or deploy infra and app separately
-./deploy-ollama.sh infra
-./deploy-ollama.sh ollama
-
-# Destroy everything
-./deploy-ollama.sh destroy
-```
+4. **Destroy everything:**
+   ```bash
+   ./deploy-ollama.sh destroy
+   ```
 
 ---
 
 ## 🏗️ Architecture Overview
 
-- **K3s Cluster** on Azure VMs (Arc-enabled)
-- **MetalLB** for LoadBalancer IPs
-- **Traefik** as Ingress Controller (patched to LoadBalancer)
-- **Ollama API** and **Web Chat** as Kubernetes Deployments
-- **Azure Container Registry (ACR)** for images
-- **Azure Key Vault** for secrets
+- **Default deployment:**
+  - One Azure VM (K3s control plane)
+  - Llama3.2:1b Ollama model deployed by default
+  - Azure Bastion for SSH access to the VM
+  - SSH keys stored in Azure Key Vault
+  - K3s managed via Azure Arc (bearer token stored in Key Vault)
+- **Components:**
+  - **K3s Cluster** on Azure VMs (Arc-enabled)
+  - **MetalLB** for LoadBalancer IPs
+  - **Traefik** as Ingress Controller (patched to LoadBalancer)
+  - **Ollama API** and **Web Chat** as Kubernetes Deployments
+  - **Azure Container Registry (ACR)** for images
+  - **Azure Key Vault** for secrets
+  - **Azure Bastion** for secure SSH
 
 ```
 ┌──────────────┐   ┌──────────────┐   ┌──────────────┐
@@ -37,26 +68,28 @@ A fully automated, cloud-native LLM web portal powered by Ollama and a web chat 
          │                │
          ▼                ▼
    MetalLB IP        Azure ACR
+         │                │
+         ▼                ▼
+   Azure Bastion     Key Vault (SSH keys, Arc token)
+         │
+         ▼
+   Azure Arc (K3s mgmt)
 ```
 
----
+![Ollama Chat Screenshot](attachments/ollama-chat.png)
 
-## 📦 Prerequisites
-
-- Azure CLI, Terraform, Docker, kubectl
-- Azure subscription with permissions
+![Azure Resource Group Screenshot](attachments/azure-rg.png)
 
 ---
 
-## ⚙️ Deployment Flow
+## ⚙️ Deployment Workflow
 
-1. **Provision Azure Resources** (VMs, NSG, LB, Key Vault, ACR, etc.)
-2. **Install K3s, MetalLB, Traefik** (with robust patching and waits)
-3. **Build & Push Images** to ACR
-4. **Update K8s Manifests** with dynamic ACR image names
-5. **Deploy Ollama API & Chat** via Kubernetes manifests
-6. **Wait for Readiness** (Key Vault secret, Arc proxy, K8s deployments)
-7. **Access via MetalLB IP** (Traefik LB, Ingress routes)
+- **All infrastructure** is deployed via Terraform
+- **K3s** is installed via shell scripts
+- **Docker images** for Ollama API and chat are built and pushed to ACR
+- **Kubernetes manifests** (YAML) are applied via `kubectl`
+- **Ollama API** is accessed via `/api/tags` (see OLLAMA.md for more)
+- **Web chat** is accessed via `/chat` route
 
 ---
 
