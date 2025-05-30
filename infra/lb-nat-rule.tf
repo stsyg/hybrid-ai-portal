@@ -9,7 +9,7 @@ resource "azurerm_lb" "k3s_public" {
 
   frontend_ip_configuration {
     name                 = "PublicIPAddress"
-    public_ip_address_id = azurerm_public_ip.k3s_cp.id
+    public_ip_address_id = azurerm_public_ip.k3s_lb.id
   }
 }
 
@@ -22,15 +22,15 @@ resource "azurerm_lb_probe" "k3s_http" {
   name            = "http-probe"
   loadbalancer_id = azurerm_lb.k3s_public.id
   protocol        = "Tcp"
-  port            = 30090
+  port            = 80
 }
 
 resource "azurerm_lb_rule" "k3s_http" {
   name                           = "http-rule"
   loadbalancer_id                = azurerm_lb.k3s_public.id
-  protocol                      = "Tcp"
+  protocol                       = "Tcp"
   frontend_port                  = 80
-  backend_port                   = 30090
+  backend_port                   = 80
   frontend_ip_configuration_name = "PublicIPAddress"
   backend_address_pool_ids       = [azurerm_lb_backend_address_pool.k3s_backend.id]
   probe_id                       = azurerm_lb_probe.k3s_http.id
@@ -40,4 +40,8 @@ resource "azurerm_network_interface_backend_address_pool_association" "k3s_cp" {
   network_interface_id    = azurerm_network_interface.k3s_cp.id
   ip_configuration_name   = "internal"
   backend_address_pool_id = azurerm_lb_backend_address_pool.k3s_backend.id
+  depends_on = [
+    azurerm_linux_virtual_machine.k3s_cp,
+    azurerm_network_interface.k3s_cp
+  ]
 }

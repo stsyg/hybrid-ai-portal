@@ -19,12 +19,24 @@ ACR_SERVER=$(terraform output -raw acr_login_server)
 # Go back to project root
 cd "$PROJECT_ROOT"
 
-IMAGE_TAG="$ACR_SERVER/ollama-api:latest"
+API_IMAGE_TAG="$ACR_SERVER/ollama-api:latest"
 
-echo "🔄 Updating Kubernetes deployment with image: $IMAGE_TAG"
+echo "🔄 Updating Kubernetes Ollama API deployment with image: $API_IMAGE_TAG"
 
-# Update the deployment.yaml file with the correct ACR image
-sed -i "s|image: .*|image: $IMAGE_TAG|g" ollama-api/k8s/deployment.yaml
+# Update the Ollama API deployment file with the correct ACR image
+sed -i "s|image: .*|image: $API_IMAGE_TAG|g" ollama-api/k8s/ollama-api.yaml
 
-echo "✅ Updated deployment.yaml with correct ACR image"
-echo "📝 Image in deployment.yaml is now: $IMAGE_TAG"
+echo "✅ Updated ollama-api.yaml with correct ACR image"
+echo "📝 Image in dollama-api.yaml is now: $API_IMAGE_TAG"
+echo ""
+
+# Also update the Ollama Chat deployment file with the correct ACR image
+CHAT_IMAGE_TAG="$ACR_SERVER/ollama-chat:latest"
+
+echo "🔄 Updating Kubernetes Ollama Chat deployment with image: $CHAT_IMAGE_TAG"
+
+sed -i "s|image: .*|image: $CHAT_IMAGE_TAG|g" ollama-api/k8s/ollama-chat.yaml
+
+echo "✅ Updated ollama-chat.yaml with correct ACR image: $CHAT_IMAGE_TAG"
+echo "📝 Image in dollama-api.yaml is now: $CHAT_IMAGE_TAG"
+echo ""

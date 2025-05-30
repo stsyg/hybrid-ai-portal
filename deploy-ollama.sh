@@ -6,75 +6,170 @@ set -e
 # Set the model name to install (see https://ollama.com/search for available models)
 MODEL_NAME="llama3.2:1b"
 
-echo "🚀 Deploying Ollama API to K3s cluster..."
-echo ""
-
 # Help/usage output
 if [[ "$1" == "--help" || "$1" == "-h" ]]; then
-  echo "Usage: $0 [infra|ollama|destroy]"
+  echo "Usage: $0 [infra|ollama|destroy|all]"
   echo ""
   echo "Options:"
   echo "  infra     Deploy all Azure infrastructure with Terraform only."
   echo "  ollama    Deploy Ollama API, chat UI, and models to Kubernetes only (assumes infra exists)."
   echo "  destroy   Destroy all Azure infrastructure (and K8s workloads within it)."
+  echo "  all       Deploy both infra and Ollama API sequentially."
   echo "  -h, --help  Show this help message."
   echo ""
   echo "Examples:"
   echo "  $0 infra     # Deploy infra only"
   echo "  $0 ollama    # Deploy Ollama app only (assumes infra exists)"
   echo "  $0 destroy   # Destroy all infra (and K8s workloads)"
+  echo "  $0 all       # Deploy both infra and Ollama API sequentially"
   exit 0
 fi
 
 # Infra only
 if [[ "$1" == "infra" ]]; then
-  ./scripts/deploy-infra.sh apply
+  ./scripts/deploy-infra.sh
   exit $?
 fi
 
 # Destroy option
 if [[ "$1" == "destroy" ]]; then
   ./scripts/deploy-infra.sh destroy
+  echo "✅ Terraform destroy complete."
   exit $?
 fi
 
-# Ollama only (default if no arg or 'ollama')
-if [[ -z "$1" || "$1" == "ollama" ]]; then
-  # Bootstrap MetalLB CRDs/namespace if needed
-  ./scripts/bootstrap-metallb.sh
+# Run both infra and ollama if 'all' is specified or no argument is provided
+if [[ -z "$1" || "$1" == "all" ]]; then
+  "$0" infra
+  INFRA_EXIT_CODE=$?
+  if [[ $INFRA_EXIT_CODE -ne 0 ]]; then
+    echo "❌ Infra deployment failed. Skipping Ollama deployment."
+    exit $INFRA_EXIT_CODE
+  fi
+  "$0" ollama
+  exit $?
+fi
 
-  # Step 1: Update manifests with correct ACR image
-  echo "📝 Step 1: Updating Kubernetes manifests..."
-  ./scripts/update-k8s-manifests.sh
+# Ollama only (if explicitly specified)
+if [[ "$1" == "ollama" ]]; then
+  # Start Azure Arc proxy if not already running
+  CLUSTER_NAME=$(cd infra && terraform output -raw k3s_cp_cluster_name | sed 's/-rg.*//')
+  RESOURCE_GROUP=$(cd infra && terraform output -raw k3s_resource_group)
+  KV=$(cd infra && terraform output -raw kv_name)
+
+  # Validate required variables
+  if [[ -z "$CLUSTER_NAME" || -z "$RESOURCE_GROUP" || -z "$KV" ]]; then
+    echo "❌ Error: One or more required variables (CLUSTER_NAME, RESOURCE_GROUP, KV) are empty."
+    echo "   CLUSTER_NAME='$CLUSTER_NAME'"
+    echo "   RESOURCE_GROUP='$RESOURCE_GROUP'"
+    echo "   KV='$KV'"
+    exit 1
+  fi
+
+  # Wait for arc-admin-bearer-token to appear in Key Vault
+  echo "⏳ Waiting for arc-admin-bearer-token to be available in Key Vault $KV..."
+  MAX_ATTEMPTS=60
+  SLEEP_INTERVAL=10
+  for ((i=1; i<=MAX_ATTEMPTS; i++)); do
+    set +e
+    TOKEN=$(az keyvault secret show --vault-name "$KV" --name arc-admin-bearer-token --query value -o tsv 2>/dev/null)
+    AZ_EXIT=$?
+    set -e
+    if [[ $AZ_EXIT -eq 0 && -n "$TOKEN" && "$TOKEN" != "None" ]]; then
+      echo "✅ arc-admin-bearer-token found in Key Vault (after $((i*SLEEP_INTERVAL)) seconds)."
+      break
+    fi
+    echo "  [$(date '+%H:%M:%S')] Attempt $i/$MAX_ATTEMPTS: Secret not found yet. Waiting $SLEEP_INTERVAL seconds..."
+    sleep $SLEEP_INTERVAL
+    if [[ $i -eq $MAX_ATTEMPTS ]]; then
+      echo "❌ Timed out waiting ($((MAX_ATTEMPTS*SLEEP_INTERVAL))s) for arc-admin-bearer-token in Key Vault $KV. Exiting."
+      exit 1
+    fi
+  done
+
+  TOKEN=$(az keyvault secret show --vault-name "$KV" --name arc-admin-bearer-token --query value -o tsv)
+  if [[ -z "$TOKEN" ]]; then
+    echo "❌ Error: Failed to retrieve arc-admin-bearer-token from Key Vault $KV."
+    exit 1
+  fi
+
+  PROXY_PORT=$(( ( RANDOM % 1000 )  + 47011 ))
+  echo "🔗 Starting Azure Arc proxy on port $PROXY_PORT..."
+  az connectedk8s proxy -n "$CLUSTER_NAME" -g "$RESOURCE_GROUP" --token "$TOKEN" --port $PROXY_PORT > /dev/null 2>&1 &
+  export KUBECONFIG=~/.kube/config  # Ensure kubectl uses the right config
+  PROXY_PID=$!
+  sleep 5
+  # Wait for Kubernetes API to be available before proceeding
+  NODE_NAME=$(cd infra && terraform output -raw k3s_cp_vm_name)
+  echo "⏳ Waiting for Kubernetes API and node $NODE_NAME to be available..."
+  for i in {1..60}; do
+    NODE_CHECK=$(kubectl get nodes --no-headers 2>/dev/null | grep -w "$NODE_NAME" | awk '{print $2}')
+    if [[ "$NODE_CHECK" == "Ready" ]]; then
+      echo "✅ Kubernetes API is available and node $NODE_NAME is Ready."
+      echo ""
+      break
+    fi
+    sleep 5
+    if [[ $i -eq 60 ]]; then
+      echo "❌ Timed out waiting for Kubernetes API or node $NODE_NAME. Exiting."
+      echo ""
+      kill $PROXY_PID 2>/dev/null || true
+      exit 1
+    fi
+  done
+  
+  # Bootstrap MetalLB CRDs/namespace if needed
+  echo "🚀 Bootstrap MetalLB..."
+  ./scripts/bootstrap-metallb.sh
   echo ""
 
-  # Step 2: Build and push Docker image
-  echo "🏗️  Step 2: Building and pushing Docker image..."
+  # Build and push Docker image
+  echo "🏗️ Building and pushing Docker image..."
   ./scripts/build-and-push.sh
   echo ""
 
-  # Step 3: Setup ACR pull secret
-  echo "🔐 Step 3: Setting up ACR pull secret..."
+  # Update manifests with correct ACR image
+  echo "📝 Updating Kubernetes manifests..."
+  ./scripts/update-k8s-manifests.sh
+  echo ""
+
+  # Setup ACR pull secret
+  echo "🔐 Setting up ACR pull secret..."
   ./scripts/setup-acr-secret.sh
   echo ""
 
-  # Step 4: Deploying Ollama to Kubernetes...
-  echo "🎯 Step 4: Deploying Ollama to Kubernetes..."
+  # Deploying Ollama to Kubernetes...
+  echo "🎯 Deploying Ollama to Kubernetes..."
   kubectl apply -f ollama-api/k8s/
   echo ""
 
-  # Step 5: Wait for deployment
-  echo "⏳ Step 5: Waiting for deployment to be ready..."
-  kubectl wait --for=condition=available --timeout=300s deployment/ollama-api
+  # Wait for deployments
+  echo "⏳ Waiting for deployments to be ready..."
+  kubectl wait --for=condition=available --timeout=180s deployment/ollama-api || DEPLOY_API_STATUS=$?
+  kubectl wait --for=condition=available --timeout=180s deployment/ollama-chat || DEPLOY_CHAT_STATUS=$?
+  if [[ $DEPLOY_API_STATUS -ne 0 || $DEPLOY_CHAT_STATUS -ne 0 ]]; then
+    echo "⚠️  Not all deployments are ready after first wait. Waiting 2 more minutes..."
+    sleep 120
+    kubectl wait --for=condition=available --timeout=60s deployment/ollama-api || DEPLOY_API_STATUS=$?
+    kubectl wait --for=condition=available --timeout=60s deployment/ollama-chat || DEPLOY_CHAT_STATUS=$?
+    if [[ $DEPLOY_API_STATUS -ne 0 || $DEPLOY_CHAT_STATUS -ne 0 ]]; then
+      echo "❌ ERROR: ollama-api or ollama-chat deployment did not become ready. Exiting."
+      kubectl get pods
+      exit 1
+    fi
+  fi
+  echo "✅ Both ollama-api and ollama-chat deployments are ready."
   echo ""
 
-  # Step 6: Show status
+  # Show status
   echo "📊 Deployment Status:"
   kubectl get pods,svc,ingress -l app=ollama-api
+  kubectl get pods,svc,ingress -l app=ollama-chat
+  echo ""
 
-  # Step 7: Get access information
+  # Get access information
   PRIVATE_IP=$(kubectl get svc traefik -n kube-system -o jsonpath='{.status.loadBalancer.ingress[0].ip}')
-  PUBLIC_IP=$(az network public-ip show --resource-group $(terraform output -raw resource_group_name) --name $(terraform output -raw public_ip_name) --query ipAddress -o tsv 2>/dev/null)
+  PUBLIC_IP=$(az network public-ip show --resource-group $(cd infra && terraform output -raw k3s_resource_group) --name $(cd infra && terraform output -raw k3s_lb_pip_name) --query ipAddress -o tsv 2>/dev/null)
 
   SEPARATOR="=============================="
   echo ""
@@ -96,11 +191,12 @@ if [[ -z "$1" || "$1" == "ollama" ]]; then
   fi
   echo "$SEPARATOR"
 
-  # Step 8: Install default LLM model
-  echo "🤖 Step 8: Installing default LLM model ($MODEL_NAME)..."
+  # Install default LLM model
+  echo "🤖 Installing default LLM model ($MODEL_NAME)..."
   ./scripts/install-model.sh "$MODEL_NAME"
+  echo ""
 
-  # Step 9: Final output and test info
+  # Final output and test info
   POD_NAME=$(kubectl get pods -l app=ollama-api -o jsonpath='{.items[0].metadata.name}')
   echo "$SEPARATOR"
   echo "✅ Chat application deployed successfully!"

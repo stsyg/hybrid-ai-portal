@@ -3,7 +3,10 @@
 # Script to build and push Ollama API image to ACR
 # Builds and pushes the Ollama API Docker image to Azure Container Registry (ACR)
 # Usage: ./build-and-push.sh
-# This script logs into ACR, builds the Ollama API Docker image, and pushes it to ACR.
+# This script:
+# - logs into ACR
+# - builds the Ollama API and Ollama Chat Docker images
+# - pushes images to ACR
 
 set -e
 
@@ -36,15 +39,44 @@ echo "$ACR_PASS" | docker login "$ACR_SERVER" --username "$ACR_USER" --password-
 # Go back to project root
 cd "$PROJECT_ROOT"
 
-# Build and push the image
+# Build and push the Ollama API image
 IMAGE_TAG="$ACR_SERVER/ollama-api:latest"
-echo "🏗️  Building Docker image: $IMAGE_TAG"
+echo "🏗️ Building Ollama Api Docker image: $IMAGE_TAG"
 docker build -t "$IMAGE_TAG" ./ollama-api
 
-echo "📤 Pushing image to ACR..."
+echo "📤 Pushing Ollama API image to ACR..."
 docker push "$IMAGE_TAG"
 
 echo "✅ Successfully built and pushed $IMAGE_TAG"
 echo ""
-echo "📝 Update your Kubernetes manifests with this image:"
+echo "📝 Next is to update your Kubernetes manifests with this image:"
 echo "   $IMAGE_TAG"
+echo ""
+
+echo "🚀 Building and deploying Ollama Chat Interface..."
+
+# Build and push the Ollama Chat image
+CHAT_TAG="$ACR_SERVER/ollama-chat:latest"
+CHAT_DIR="./ollama-api/web-chat"
+
+# Check if chat directory exists
+if [ ! -d "$CHAT_DIR" ]; then
+    echo "❌ Chat directory not found: $CHAT_DIR"
+    echo ""
+    exit 1
+fi
+
+# Build chat application image
+echo "📦 Building Ollama Chat Docker image: $CHAT_TAG"
+cd "$CHAT_DIR"
+docker build -t "$CHAT_TAG" .
+cd - > /dev/null
+
+echo "📤 Pushing Ollama Chat image to ACR..."
+docker push "$CHAT_TAG"
+
+echo "✅ Successfully built and pushed $CHAT_TAG"
+echo ""
+echo "📝 Next is to update your Kubernetes manifests with this image:"
+echo "   $CHAT_TAG"
+echo ""

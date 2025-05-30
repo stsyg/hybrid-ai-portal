@@ -45,3 +45,4 @@ kubectl create secret docker-registry acr-pull-secret \
 echo "✅ Successfully created ACR pull secret 'acr-pull-secret'"
 echo "🎯 You can now deploy your Ollama API with:"
 echo "   kubectl apply -f ollama-api/k8s/"
+echo ""

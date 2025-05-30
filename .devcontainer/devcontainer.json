@@ -44,7 +44,6 @@
                 "azureTerraform.terminal": "integrated"
             },
             "extensions": [
-                "editorconfig.editorconfig",
                 "hashicorp.terraform",
                 "ms-azuretools.vscode-azureterraform",
                 "ms-azuretools.vscode-docker",

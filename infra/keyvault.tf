@@ -35,7 +35,7 @@ resource "azurerm_role_assignment" "keyvault_access_for_tf" {
 
 # Wait for role assignment to propagate
 resource "time_sleep" "wait_for_keyvault_rbac" {
-  depends_on = [azurerm_role_assignment.keyvault_access_for_tf]
+  depends_on      = [azurerm_role_assignment.keyvault_access_for_tf]
   create_duration = "60s"
 }
 

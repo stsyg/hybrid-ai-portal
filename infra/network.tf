@@ -22,6 +22,12 @@ resource "azurerm_subnet" "main" {
 resource "azurerm_subnet_network_security_group_association" "k3s_subnet" {
   subnet_id                 = azurerm_subnet.main.id
   network_security_group_id = azurerm_network_security_group.k3s.id
+  depends_on = [
+    azurerm_linux_virtual_machine.k3s_cp,
+    azurerm_network_interface.k3s_cp,
+    azurerm_linux_virtual_machine.k3s_worker,
+    azurerm_network_interface.k3s_worker
+  ]
 }
 
 resource "azurerm_network_security_group" "k3s" {
@@ -53,17 +59,6 @@ resource "azurerm_network_security_group" "k3s" {
     source_port_range          = "*"
   }
 
-  security_rule {
-    name                       = "AllowLB30090"
-    priority                   = 210
-    direction                  = "Inbound"
-    access                     = "Allow"
-    protocol                   = "Tcp"
-    source_address_prefix      = "AzureLoadBalancer"
-    destination_address_prefix = "*"
-    destination_port_range     = "30090"
-    source_port_range          = "*"
-  }
 
   security_rule {
     name                       = "AllowHTTPS"
@@ -107,7 +102,7 @@ resource "azurerm_network_security_group" "k3s" {
 # -----------------------------
 # Load Balancer Public IP
 # -----------------------------
-resource "azurerm_public_ip" "k3s_cp" {
+resource "azurerm_public_ip" "k3s_lb" {
   name                = "${var.project_name}-k3s-cp-ip-${random_integer.suffix.result}"
   location            = var.location
   resource_group_name = azurerm_resource_group.main.name
