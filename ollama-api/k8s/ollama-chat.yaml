@@ -17,7 +17,7 @@ spec:
     spec:
       containers:
       - name: ollama-chat
-        image: jshaipacr5297.azurecr.io/ollama-chat:latest
+        image: jshaipacr8076.azurecr.io/ollama-chat:latest
         ports:
         - containerPort: 80
         resources:

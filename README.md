@@ -46,7 +46,7 @@ To run the deployment scripts, you need:
 ## 🏗️ Architecture Overview
 
 - **Default deployment:**
-  - One Azure VM (K3s control plane)
+  - Azure VMs: K3s control plane + workers (optional)
   - Llama3.2:1b Ollama model deployed by default
   - Azure Bastion for SSH access to the VM
   - SSH keys stored in Azure Key Vault
@@ -54,41 +54,27 @@ To run the deployment scripts, you need:
 - **Components:**
   - **K3s Cluster** on Azure VMs (Arc-enabled)
   - **MetalLB** for LoadBalancer IPs
-  - **Traefik** as Ingress Controller (patched to LoadBalancer)
+  - **Traefik** as Ingress Controller
   - **Ollama API** and **Web Chat** as Kubernetes Deployments
-  - **Azure Container Registry (ACR)** for images
-  - **Azure Key Vault** for secrets
-  - **Azure Bastion** for secure SSH
+  - **Azure Container Registry (ACR)** for Docker images
+  - **Azure Key Vault** for all the secrets
+  - **Azure Bastion** for secure SSH to k3s VMs
 
-```
-┌──────────────┐   ┌──────────────┐   ┌──────────────┐
-│  Web Client  │─▶│   Traefik    │─▶│  Ollama API  │
-│  (Chat UI)   │   │ (LB+Ingress)│   │  + Web Chat  │
-└──────────────┘   └──────────────┘   └──────────────┘
-         │                │
-         ▼                ▼
-   MetalLB IP        Azure ACR
-         │                │
-         ▼                ▼
-   Azure Bastion     Key Vault (SSH keys, Arc token)
-         │
-         ▼
-   Azure Arc (K3s mgmt)
-```
+![Ollama Chat UI](assets/ollama-chat.png)
 
-![Ollama Chat Screenshot](attachments/ollama-chat.png)
+![Ollama Chat API](assets/ollama-api.png)
 
-![Azure Resource Group Screenshot](attachments/azure-rg.png)
+![Azure Resource Group](assets/azure-rg.png)
 
 ---
 
 ## ⚙️ Deployment Workflow
 
-- **All infrastructure** is deployed via Terraform
-- **K3s** is installed via shell scripts
+- **All infrastructure** is deployed via Terraform. Azure resources parameters can be updated in `terraform.tfvars`
+- **K3s** is installed and configured via shell scripts
 - **Docker images** for Ollama API and chat are built and pushed to ACR
 - **Kubernetes manifests** (YAML) are applied via `kubectl`
-- **Ollama API** is accessed via `/api/tags` (see OLLAMA.md for more)
+- **Ollama API** is accessed via `/api/tags`
 - **Web chat** is accessed via `/chat` route
 
 ---
@@ -127,13 +113,3 @@ To run the deployment scripts, you need:
   ```bash
   kubectl scale deployment ollama-chat --replicas=3
   ```
-
----
-
-## 📚 See also
-- [OLLAMA.md](./OLLAMA.md) for detailed Ollama API usage and chat features
-- [scripts/](./scripts/) for automation details
-
----
-
-*This README reflects the latest robust, cloud-native, and automated deployment process. For troubleshooting, see the script outputs and comments in OLLAMA.md.*

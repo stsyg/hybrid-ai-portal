@@ -22,7 +22,7 @@ spec:
       containers:
       - name: ollama-api
         # Set the image to your ACR repo after build-and-push.sh
-        image: jshaipacr5297.azurecr.io/ollama-api:latest
+        image: jshaipacr8076.azurecr.io/ollama-api:latest
         imagePullPolicy: Always
         command: ["/bin/ollama"]
         args: ["serve"]
