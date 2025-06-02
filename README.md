@@ -60,10 +60,13 @@ To run the deployment scripts, you need:
   - **Azure Key Vault** for all the secrets
   - **Azure Bastion** for secure SSH to k3s VMs
 
+Example of Ollama Chart interface (http://<public_ip>/chat).
 ![Ollama Chat UI](assets/ollama-chat.png)
 
+Example of Ollama API (http://<public_ip>/ollama/api/tags)
 ![Ollama Chat API](assets/ollama-api.png)
 
+Example of deployed Azure resources in the resource group.
 ![Azure Resource Group](assets/azure-rg.png)
 
 ---
