@@ -20,7 +20,7 @@ if [ "$(id -u)" -ne 0 ]; then
 fi
 
 if [ "${TERRAFORM_VERSION}" = "latest" ] || [ "${TERRAFORM_VERSION}" = "lts" ] || [ "${TERRAFORM_VERSION}" = "current" ]; then
-    TERRAFORM_VERSION=$(curl -fLsS https://releases.hashicorp.com/terraform/ | grep -m1 -oE '>terraform_[0-9]+\.[0-9]+\.[0-9]+<' | sed 's/^>terraform_\(.*\)<$/\1/')
+    TERRAFORM_VERSION=$(curl -fLsS https://releases.hashicorp.com/terraform/ | grep -oE '>terraform_[0-9]+\.[0-9]+\.[0-9]+<' | sed 's/^>terraform_\(.*\)<$/\1/' | sort -V | tail -n 1)
 fi
 
 if [ -z "$TERRAFORM_VERSION" ]; then
@@ -44,25 +44,27 @@ if ! dpkg -s curl ca-certificates unzip > /dev/null 2>&1; then
     apt-get -y install --no-install-recommends curl ca-certificates unzip
 fi
 
-# Install Terraform, tflint
-# Download and verify Terraform binary
-TF_URL="https://releases.hashicorp.com/terraform/${TERRAFORM_VERSION}/terraform_${TERRAFORM_VERSION}_linux_amd64.zip"
-echo "Downloading Terraform from: $TF_URL"
-TF_SHA256_URL="https://releases.hashicorp.com/terraform/${TERRAFORM_VERSION}/terraform_${TERRAFORM_VERSION}_SHA256SUMS"
-TF_SHA256_SIG_URL="https://releases.hashicorp.com/terraform/${TERRAFORM_VERSION}/terraform_${TERRAFORM_VERSION}_SHA256SUMS.sig"
+# Install Terraform using official HashiCorp APT repo
+export DEBIAN_FRONTEND=noninteractive
+wget -O- https://apt.releases.hashicorp.com/gpg | gpg --dearmor -o /usr/share/keyrings/hashicorp-archive-keyring.gpg
+ARCH=$(dpkg --print-architecture)
+CODENAME=$(grep -oP '(?<=UBUNTU_CODENAME=).*' /etc/os-release || lsb_release -cs)
+echo "deb [arch=${ARCH} signed-by=/usr/share/keyrings/hashicorp-archive-keyring.gpg] https://apt.releases.hashicorp.com ${CODENAME} main" > /etc/apt/sources.list.d/hashicorp.list
+apt-get update
 
-mkdir -p /tmp/tf-downloads
-cd /tmp/tf-downloads
-set -e
-curl -fLsS -o terraform.zip "$TF_URL"
-curl -fLsS -o SHA256SUMS "$TF_SHA256_URL"
-
-# Verify SHA256 checksum (security best practice)
-if command -v sha256sum >/dev/null 2>&1; then
-    grep "terraform_${TERRAFORM_VERSION}_linux_amd64.zip" SHA256SUMS | sha256sum -c -
+if [ "${TERRAFORM_VERSION}" = "latest" ]; then
+    apt-get install -y terraform
+else
+    # Try to install the specific version, fallback with error if not found
+    if apt-cache madison terraform | grep -q "${TERRAFORM_VERSION}"; then
+        apt-get install -y terraform="${TERRAFORM_VERSION}"
+    else
+        echo "ERROR: Terraform version ${TERRAFORM_VERSION} not found in APT repo."
+        echo "Available versions:"
+        apt-cache madison terraform
+        exit 1
+    fi
 fi
-unzip terraform.zip
-mv -f terraform /usr/local/bin/
 
 # Download and install tflint (no official SHA256, so just download)
 if [ "${TFLINT_VERSION}" != "none" ]; then
