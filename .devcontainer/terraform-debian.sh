@@ -44,41 +44,27 @@ if ! dpkg -s curl ca-certificates unzip > /dev/null 2>&1; then
     apt-get -y install --no-install-recommends curl ca-certificates unzip
 fi
 
-# Install Terraform using official HashiCorp APT repo
-export DEBIAN_FRONTEND=noninteractive
-wget -O- https://apt.releases.hashicorp.com/gpg | gpg --dearmor --batch --yes | tee /usr/share/keyrings/hashicorp-archive-keyring.gpg > /dev/null
+# Install Terraform manually (no APT repo logic)
 ARCH=$(dpkg --print-architecture)
-CODENAME=$(grep -oP '(?<=UBUNTU_CODENAME=).*' /etc/os-release || lsb_release -cs)
-echo "deb [arch=${ARCH} signed-by=/usr/share/keyrings/hashicorp-archive-keyring.gpg] https://apt.releases.hashicorp.com ${CODENAME} main" > /etc/apt/sources.list.d/hashicorp.list
-apt-get update
-
-# Try to install Terraform from APT repo (latest or specific version)
-APT_INSTALL_OK=0
-if [ "${TERRAFORM_VERSION}" = "latest" ]; then
-    apt-get install -y terraform || APT_INSTALL_OK=1
+if [ "$ARCH" = "amd64" ]; then
+    TF_ARCH="amd64"
 else
-    if apt-cache madison terraform | grep -q "${TERRAFORM_VERSION}"; then
-        apt-get install -y terraform="${TERRAFORM_VERSION}" || APT_INSTALL_OK=1
-    else
-        APT_INSTALL_OK=1
-    fi
+    echo "ERROR: Only amd64 architecture is supported by this script." >&2
+    exit 1
 fi
 
-if [ "$APT_INSTALL_OK" -ne 0 ]; then
-    echo "APT install failed or version not found. Falling back to manual install."
-    TF_URL="https://releases.hashicorp.com/terraform/${TERRAFORM_VERSION}/terraform_${TERRAFORM_VERSION}_linux_amd64.zip"
-    TF_SHA256_URL="https://releases.hashicorp.com/terraform/${TERRAFORM_VERSION}/terraform_${TERRAFORM_VERSION}_SHA256SUMS"
-    mkdir -p /tmp/tf-downloads && cd /tmp/tf-downloads
-    curl -fLsS -o terraform.zip "$TF_URL"
-    curl -fLsS -o SHA256SUMS "$TF_SHA256_URL"
-    if command -v sha256sum >/dev/null 2>&1; then
-        grep "terraform_${TERRAFORM_VERSION}_linux_amd64.zip" SHA256SUMS | sha256sum -c -
-    fi
-    unzip terraform.zip
-    mv -f terraform /usr/local/bin/
-    cd -
-    rm -rf /tmp/tf-downloads
+TF_URL="https://releases.hashicorp.com/terraform/${TERRAFORM_VERSION}/terraform_${TERRAFORM_VERSION}_linux_${TF_ARCH}.zip"
+TF_SHA256_URL="https://releases.hashicorp.com/terraform/${TERRAFORM_VERSION}/terraform_${TERRAFORM_VERSION}_SHA256SUMS"
+mkdir -p /tmp/tf-downloads && cd /tmp/tf-downloads
+curl -fLsS -o terraform.zip "$TF_URL"
+curl -fLsS -o SHA256SUMS "$TF_SHA256_URL"
+if command -v sha256sum >/dev/null 2>&1; then
+    grep "terraform_${TERRAFORM_VERSION}_linux_${TF_ARCH}.zip" SHA256SUMS | sha256sum -c -
 fi
+unzip terraform.zip
+mv -f terraform /usr/local/bin/
+cd -
+rm -rf /tmp/tf-downloads
 
 # Download and install tflint (no official SHA256, so just download)
 if [ "${TFLINT_VERSION}" != "none" ]; then
