@@ -44,7 +44,7 @@ if ! dpkg -s curl ca-certificates unzip > /dev/null 2>&1; then
     apt-get -y install --no-install-recommends curl ca-certificates unzip
 fi
 
-# Install Terraform manually (no APT repo logic)
+# Always install Terraform via manual download (no APT repo logic)
 ARCH=$(dpkg --print-architecture)
 if [ "$ARCH" = "amd64" ]; then
     TF_ARCH="amd64"
