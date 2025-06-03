@@ -30,11 +30,11 @@ RUN usermod --shell /usr/bin/zsh vscode
 
 # Install Oh My Zsh for vscode user if not already present, set theme and completions
 RUN if [ ! -d /home/vscode/.oh-my-zsh ]; then \
-      RUNZSH=no CHSH=no KEEP_ZSHRC=yes su vscode -c 'bash -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)"'; \
+      su vscode -c 'export RUNZSH=no CHSH=no KEEP_ZSHRC=yes && bash -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)"'; \
     fi && \
     echo 'fpath+=(/usr/share/zsh-completions)' >> /home/vscode/.zshrc && \
     echo 'autoload -U compinit && compinit' >> /home/vscode/.zshrc && \
-    sed -i 's/ZSH_THEME=\".*\"/ZSH_THEME=\"agnoster\"/' /home/vscode/.zshrc && \
+    sed -i 's/ZSH_THEME=".*"/ZSH_THEME="agnoster"/' /home/vscode/.zshrc && \
     chown vscode:vscode /home/vscode/.zshrc
 
 # [Option] Install Azure CLI
