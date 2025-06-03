@@ -32,15 +32,19 @@ RUN usermod --shell /usr/bin/zsh vscode
 ARG INSTALL_AZURE_CLI="true"
 # [Option] Install Docker CLI
 ARG INSTALL_DOCKER="true"
-# Install kubectl (needed for K3s management)
-RUN curl -sSL -o /usr/local/bin/kubectl https://storage.googleapis.com/kubernetes-release/release/$(curl -s https://storage.googleapis.com/kubernetes-release/release/stable.txt)/bin/linux/amd64/kubectl \
-    && chmod +x /usr/local/bin/kubectl
 
 # Install Terraform & tflint
 ARG TERRAFORM_VERSION
 ARG TFLINT_VERSION
-RUN bash /tmp/library-scripts/terraform-debian.sh "${TERRAFORM_VERSION}" "${TFLINT_VERSION}" \
-    && rm -rf /tmp/library-scripts
+
+# Install kubectl (needed for K3s management)
+RUN curl -sSL -o /usr/local/bin/kubectl https://storage.googleapis.com/kubernetes-release/release/$(curl -s https://storage.googleapis.com/kubernetes-release/release/stable.txt)/bin/linux/amd64/kubectl \
+    && chmod +x /usr/local/bin/kubectl
+
+# Copy and run custom Terraform/tflint install script
+COPY terraform-debian.sh /tmp/terraform-debian.sh
+RUN bash /tmp/terraform-debian.sh "${TERRAFORM_VERSION}" "${TFLINT_VERSION}" \
+    && rm -f /tmp/terraform-debian.sh
 
 # Some people have git config pointed at a different gpg location
 RUN ln -s /usr/bin/gpg /usr/local/bin/gpg
