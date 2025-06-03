@@ -50,8 +50,7 @@ RUN sed -i 's/\r$//' /tmp/terraform-debian.sh \
 # Some people have git config pointed at a different gpg location
 RUN ln -s /usr/bin/gpg /usr/local/bin/gpg
 
-ENTRYPOINT [ "/usr/local/share/docker-init.sh" ]
-CMD [ "sleep", "infinity" ]
+CMD ["sleep", "infinity"]
 
 # [Optional] Uncomment this section to install additional OS packages.
 # RUN apt-get update && export DEBIAN_FRONTEND=noninteractive \
