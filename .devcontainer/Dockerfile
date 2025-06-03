@@ -15,8 +15,8 @@ ARG USERNAME=vscode
 ARG USER_UID=1000
 ARG USER_GID=$USER_UID
 RUN apt-get update && export DEBIAN_FRONTEND=noninteractive \
-    && bash /tmp/library-scripts/common-debian.sh "${INSTALL_ZSH}" "${USERNAME}" "${USER_UID}" "${USER_GID}" "${UPGRADE_PACKAGES}" "true" "true" \
     && apt-get install -y \
+       zsh \
        graphviz \
        zsh-completions \
        git \
@@ -25,6 +25,9 @@ RUN apt-get update && export DEBIAN_FRONTEND=noninteractive \
        unzip \
        jq \
     && apt-get clean -y && rm -rf /var/lib/apt/lists/*
+
+# Set zsh as default shell for vscode user
+RUN usermod --shell /usr/bin/zsh vscode
 
 # [Option] Install Azure CLI
 ARG INSTALL_AZURE_CLI="true"
