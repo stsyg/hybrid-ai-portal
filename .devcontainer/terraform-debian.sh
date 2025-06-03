@@ -4,7 +4,7 @@
 # Licensed under the MIT License. See https://go.microsoft.com/fwlink/?linkid=2090316 for license information.
 #-------------------------------------------------------------------------------------------------------------
 #
-# Docs: https://github.com/microsoft/vscode-dev-containers/blob/master/script-library/docs/terraform.md
+# Docs: https://github.com/devcontainers/features/tree/main/src/terraform
 # Maintainer: The VS Code and Codespaces Teams
 #
 # Syntax: ./terraform-debian.sh [terraform version] [tflint version] [terragrunt version]
@@ -33,15 +33,6 @@ echo "Resolved TERRAFORM_VERSION: $TERRAFORM_VERSION"
 if [ "${TFLINT_VERSION}" = "latest" ] || [ "${TFLINT_VERSION}" = "lts" ] || [ "${TFLINT_VERSION}" = "current" ]; then
     LATEST_RELEASE=$(curl -fLsS -H "Accept: application/vnd.github.v3+json" "https://api.github.com/repos/terraform-linters/tflint/releases?per_page=1&page=1")
     TFLINT_VERSION=$(echo ${LATEST_RELEASE} | grep -oE 'tag_name":\s*"v[^"]+' | sed -n '/tag_name":\s*"v/s///p')
-fi
-
-# Install curl, unzip if missing
-if ! dpkg -s curl ca-certificates unzip > /dev/null 2>&1; then
-    export DEBIAN_FRONTEND=noninteractive
-    if [ ! -d "/var/lib/apt/lists" ] || [ "$(ls /var/lib/apt/lists/ | wc -l)" = "0" ]; then
-        apt-get update
-    fi
-    apt-get -y install --no-install-recommends curl ca-certificates unzip
 fi
 
 # Always install Terraform via manual download (no APT repo logic)

@@ -1,5 +1,6 @@
-# You can pick any Debian/Ubuntu-based image. 😊
+# You can pick any Debian/Ubuntu-based image
 # the line below uses latest Ubuntu image
+# more info about image at https://mcr.microsoft.com/en-us/artifact/mar/devcontainers/base/about
 FROM mcr.microsoft.com/vscode/devcontainers/base:ubuntu
 
 RUN wget -O- https://apt.releases.hashicorp.com/gpg | gpg --dearmor | tee /usr/share/keyrings/hashicorp-archive-keyring.gpg
@@ -16,7 +17,6 @@ ARG USER_UID=1000
 ARG USER_GID=$USER_UID
 RUN apt-get update && export DEBIAN_FRONTEND=noninteractive \
     && apt-get install -y \
-       zsh \
        graphviz \
        git \
        curl \
@@ -24,18 +24,6 @@ RUN apt-get update && export DEBIAN_FRONTEND=noninteractive \
        unzip \
        jq \
     && apt-get clean -y && rm -rf /var/lib/apt/lists/*
-
-# Set zsh as default shell for vscode user
-RUN usermod --shell /usr/bin/zsh vscode
-
-# Install Oh My Zsh for vscode user if not already present, set theme and completions
-RUN if [ ! -d /home/vscode/.oh-my-zsh ]; then \
-      su vscode -c 'export RUNZSH=no CHSH=no KEEP_ZSHRC=yes && bash -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)"'; \
-    fi && \
-    echo 'fpath+=(/usr/share/zsh-completions)' >> /home/vscode/.zshrc && \
-    echo 'autoload -U compinit && compinit' >> /home/vscode/.zshrc && \
-    sed -i 's/ZSH_THEME=".*"/ZSH_THEME="agnoster"/' /home/vscode/.zshrc && \
-    chown vscode:vscode /home/vscode/.zshrc
 
 # [Option] Install Azure CLI
 ARG INSTALL_AZURE_CLI="true"
