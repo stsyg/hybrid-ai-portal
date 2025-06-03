@@ -20,11 +20,11 @@ if [ "$(id -u)" -ne 0 ]; then
 fi
 
 if [ "${TERRAFORM_VERSION}" = "latest" ] || [ "${TERRAFORM_VERSION}" = "lts" ] || [ "${TERRAFORM_VERSION}" = "current" ]; then
-    TERRAFORM_VERSION=$(curl -sSL https://releases.hashicorp.com/terraform/ | grep -m1 -oE '>terraform_[0-9]+\.[0-9]+\.[0-9]+<' | sed 's/^>terraform_\(.*\)<$/\1/')
+    TERRAFORM_VERSION=$(curl -fLsS https://releases.hashicorp.com/terraform/ | grep -m1 -oE '>terraform_[0-9]+\.[0-9]+\.[0-9]+<' | sed 's/^>terraform_\(.*\)<$/\1/')
 fi
 
 if [ "${TFLINT_VERSION}" = "latest" ] || [ "${TFLINT_VERSION}" = "lts" ] || [ "${TFLINT_VERSION}" = "current" ]; then
-    LATEST_RELEASE=$(curl -sSL -H "Accept: application/vnd.github.v3+json" "https://api.github.com/repos/terraform-linters/tflint/releases?per_page=1&page=1")
+    LATEST_RELEASE=$(curl -fLsS -H "Accept: application/vnd.github.v3+json" "https://api.github.com/repos/terraform-linters/tflint/releases?per_page=1&page=1")
     TFLINT_VERSION=$(echo ${LATEST_RELEASE} | grep -oE 'tag_name":\s*"v[^"]+' | sed -n '/tag_name":\s*"v/s///p')
 fi
 
@@ -45,8 +45,9 @@ TF_SHA256_SIG_URL="https://releases.hashicorp.com/terraform/${TERRAFORM_VERSION}
 
 mkdir -p /tmp/tf-downloads
 cd /tmp/tf-downloads
-curl -sSL -o terraform.zip "$TF_URL"
-curl -sSL -o SHA256SUMS "$TF_SHA256_URL"
+set -e
+curl -fLsS -o terraform.zip "$TF_URL"
+curl -fLsS -o SHA256SUMS "$TF_SHA256_URL"
 
 # Verify SHA256 checksum (security best practice)
 if command -v sha256sum >/dev/null 2>&1; then
@@ -58,7 +59,7 @@ mv -f terraform /usr/local/bin/
 # Download and install tflint (no official SHA256, so just download)
 if [ "${TFLINT_VERSION}" != "none" ]; then
     echo "Downloading tflint..."
-    curl -sSL -o tflint.zip https://github.com/terraform-linters/tflint/releases/download/v${TFLINT_VERSION}/tflint_linux_amd64.zip
+    curl -fLsS -o tflint.zip https://github.com/terraform-linters/tflint/releases/download/v${TFLINT_VERSION}/tflint_linux_amd64.zip
     unzip tflint.zip
     mv -f tflint /usr/local/bin/
 fi
