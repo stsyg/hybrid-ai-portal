@@ -43,7 +43,8 @@ RUN curl -sSL -o /usr/local/bin/kubectl https://storage.googleapis.com/kubernete
 
 # Copy and run custom Terraform/tflint install script
 COPY terraform-debian.sh /tmp/terraform-debian.sh
-RUN bash /tmp/terraform-debian.sh "${TERRAFORM_VERSION}" "${TFLINT_VERSION}" \
+RUN sed -i 's/\r$//' /tmp/terraform-debian.sh \
+    && bash /tmp/terraform-debian.sh "${TERRAFORM_VERSION}" "${TFLINT_VERSION}" \
     && rm -f /tmp/terraform-debian.sh
 
 # Some people have git config pointed at a different gpg location
