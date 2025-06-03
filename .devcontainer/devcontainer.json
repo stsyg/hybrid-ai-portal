@@ -68,7 +68,7 @@
     // Optionally forward common K3s/Traefik ports for browser access
     "forwardPorts": [80, 443],
     // Run commands after container creation to configure Zsh, completions, and Oh My Zsh with agnoster theme
-    "postCreateCommand": "cp /etc/skel/.zshrc /home/vscode/.zshrc && echo 'fpath+=(/usr/share/zsh-completions)' >> /home/vscode/.zshrc && echo 'autoload -U compinit && compinit' >> /home/vscode/.zshrc && sh -c 'RUNZSH=no CHSH=no KEEP_ZSHRC=yes bash -c \"$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)\"' && sed -i 's/ZSH_THEME=\".*\"/ZSH_THEME=\"agnoster\"/' /home/vscode/.zshrc && chown vscode:vscode /home/vscode/.zshrc",
+    "postCreateCommand": "echo 'fpath+=(/usr/share/zsh-completions)' >> /home/vscode/.zshrc && echo 'autoload -U compinit && compinit' >> /home/vscode/.zshrc && sh -c 'RUNZSH=no CHSH=no KEEP_ZSHRC=yes bash -c \"$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)\"' && sed -i 's/ZSH_THEME=\".*\"/ZSH_THEME=\"agnoster\"/' /home/vscode/.zshrc && chown vscode:vscode /home/vscode/.zshrc",
     // Comment out connect as root instead. More info: https://aka.ms/vscode-remote/containers/non-root.
     "remoteUser": "vscode"
 }
