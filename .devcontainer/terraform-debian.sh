@@ -38,18 +38,31 @@ if ! dpkg -s curl ca-certificates unzip > /dev/null 2>&1; then
 fi
 
 # Install Terraform, tflint
-echo "Downloading terraform..."
+# Download and verify Terraform binary
+TF_URL="https://releases.hashicorp.com/terraform/${TERRAFORM_VERSION}/terraform_${TERRAFORM_VERSION}_linux_amd64.zip"
+TF_SHA256_URL="https://releases.hashicorp.com/terraform/${TERRAFORM_VERSION}/terraform_${TERRAFORM_VERSION}_SHA256SUMS"
+TF_SHA256_SIG_URL="https://releases.hashicorp.com/terraform/${TERRAFORM_VERSION}/terraform_${TERRAFORM_VERSION}_SHA256SUMS.sig"
+
 mkdir -p /tmp/tf-downloads
-curl -sSL -o /tmp/tf-downloads/terraform.zip https://releases.hashicorp.com/terraform/${TERRAFORM_VERSION}/terraform_${TERRAFORM_VERSION}_linux_amd64.zip
-unzip /tmp/tf-downloads/terraform.zip
+cd /tmp/tf-downloads
+curl -sSL -o terraform.zip "$TF_URL"
+curl -sSL -o SHA256SUMS "$TF_SHA256_URL"
+
+# Verify SHA256 checksum (security best practice)
+if command -v sha256sum >/dev/null 2>&1; then
+    grep "terraform_${TERRAFORM_VERSION}_linux_amd64.zip" SHA256SUMS | sha256sum -c -
+fi
+unzip terraform.zip
 mv -f terraform /usr/local/bin/
 
+# Download and install tflint (no official SHA256, so just download)
 if [ "${TFLINT_VERSION}" != "none" ]; then
     echo "Downloading tflint..."
-    curl -sSL -o /tmp/tf-downloads/tflint.zip https://github.com/terraform-linters/tflint/releases/download/v${TFLINT_VERSION}/tflint_linux_amd64.zip
-    unzip /tmp/tf-downloads/tflint.zip
+    curl -sSL -o tflint.zip https://github.com/terraform-linters/tflint/releases/download/v${TFLINT_VERSION}/tflint_linux_amd64.zip
+    unzip tflint.zip
     mv -f tflint /usr/local/bin/
 fi
 
 rm -rf /tmp/tf-downloads
+cd -
 echo "Done!"
