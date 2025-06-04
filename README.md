@@ -34,6 +34,7 @@ To run the deployment scripts, you need:
    ```bash
    ./deploy-ollama.sh all
    ```
+   - Provide subscription id where resources will be deployed.
    - End-to-end deployment may take up to 30 minutes, depending on your internet connectivity (Docker images are built and pushed to ACR).
 
 4. **Destroy everything:**
