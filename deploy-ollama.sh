@@ -197,7 +197,7 @@ if [[ "$1" == "ollama" ]]; then
   echo ""
 
   # Final output and test info
-  POD_NAME=$(kubectl get pods -l app=ollama-api -o jsonpath='{.items[0].metadata.name}')
+  # POD_NAME=$(kubectl get pods -l app=ollama-api -o jsonpath='{.items[0].metadata.name}')
   echo "$SEPARATOR"
   echo "✅ Chat application deployed successfully!"
   echo ""
@@ -227,26 +227,20 @@ if [[ "$1" == "ollama" ]]; then
   echo ""
   echo "🧪 Test the API with:"
   if [ -n "$PUBLIC_IP" ]; then
-      echo "   curl http://$PUBLIC_IP/ollama/api/tags"
-      echo "   # or with hostname:"
-      echo "   curl http://ollama-public.local/api/tags"
+      echo "   curl http://$PUBLIC_IP/api/tags"
   fi
   if [ -n "$PRIVATE_IP" ]; then
-      echo "   curl http://$PRIVATE_IP/ollama/api/tags"
-      echo "   # or with hostname:"
-      echo "   curl http://ollama.local/api/tags"
+      echo "   curl http://$PRIVATE_IP/api/tags"
   fi
   echo ""
   echo "💬 Access the chat interface at:"
   if [ -n "$PUBLIC_IP" ]; then
+      echo "   http://$PUBLIC_IP"
       echo "   http://$PUBLIC_IP/chat"
-      echo "   # or with hostname:"
-      echo "   http://ollama-public.local/chat"
   fi
   if [ -n "$PRIVATE_IP" ]; then
+      echo "   http://$PRIVATE_IP"
       echo "   http://$PRIVATE_IP/chat"
-      echo "   # or with hostname:"
-      echo "   http://ollama.local/chat"
   fi
   echo "$SEPARATOR"
   exit 0
