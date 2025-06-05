@@ -34,11 +34,6 @@ variable "default_tags" {
   }
 }
 
-# variable "kv_name" {
-#   description = "Name of the Azure Key Vault"
-#   type        = string
-# }
-
 variable "enable_bastion" {
   description = "Enable Azure Bastion host"
   type        = bool
@@ -48,11 +43,6 @@ variable "bastion_sku" {
   description = "Bastion SKU. Valid: Developer, Basic, Standard, Premium"
   type        = string
 }
-
-# variable "arc_cluster_name" {
-#   description = "Name of Azure Arc-enabled Kubernetes cluster"
-#   type        = string
-# }
 
 variable "acr_sku" {
   description = "SKU for Azure Container Registry"

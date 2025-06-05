@@ -35,18 +35,6 @@ resource "azurerm_network_security_group" "k3s" {
   location            = var.location
   resource_group_name = azurerm_resource_group.main.name
 
-  # security_rule {
-  #   name                       = "AllowInternalSSH"
-  #   priority                   = 100
-  #   direction                  = "Inbound"
-  #   access                     = "Allow"
-  #   protocol                   = "Tcp"
-  #   source_address_prefix      = "10.0.0.0/16"
-  #   destination_address_prefix = "*"
-  #   destination_port_range     = "22"
-  #   source_port_range          = "*"
-  # }
-
   security_rule {
     name                       = "AllowHTTP"
     priority                   = 200
@@ -58,7 +46,6 @@ resource "azurerm_network_security_group" "k3s" {
     destination_port_range     = "80"
     source_port_range          = "*"
   }
-
 
   security_rule {
     name                       = "AllowHTTPS"
@@ -83,18 +70,6 @@ resource "azurerm_network_security_group" "k3s" {
     destination_port_range     = "30000-32767"
     source_port_range          = "*"
   }
-
-  # security_rule {
-  #   name                       = "AllowSSH"
-  #   priority                   = 500
-  #   direction                  = "Inbound"
-  #   access                     = "Allow"
-  #   protocol                   = "Tcp"
-  #   source_address_prefix      = "*"
-  #   destination_address_prefix = "*"
-  #   destination_port_range     = "22"
-  #   source_port_range          = "*"
-  # }
 
   tags = merge(var.default_tags, { Role = "K3s Network NSG" })
 }
