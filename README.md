@@ -199,6 +199,24 @@ default_models = [
 enable_gpu_support = true
 ```
 
+### Pre-configured Examples
+
+The repository includes example configurations for different use cases in `infra/terraform.tfvars.example`:
+
+- **Basic Configuration**: Minimal setup for development and testing
+- **Production Configuration**: High-performance setup with multiple models  
+- **Development Configuration**: Cost-optimized setup for development
+- **Enterprise Configuration**: Maximum security and performance setup
+
+Copy the relevant section from the example file to your `terraform.tfvars` and modify as needed:
+
+```bash
+# Copy example configurations
+cp infra/terraform.tfvars.example infra/my-config.tfvars
+# Edit and use your configuration  
+mv infra/my-config.tfvars infra/terraform.tfvars
+```
+
 ---
 
 ## 🌐 Accessing the Portal
@@ -264,3 +282,84 @@ enable_gpu_support = true
     -H 'Content-Type: application/json' \
     -d '{"model": "llama3.1:8b", "prompt": "Hello, world!", "stream": false}'
   ```
+
+---
+
+## ❓ Frequently Asked Questions
+
+### How do I add more models after deployment?
+You can install additional models using the provided scripts:
+```bash
+# Install a single model
+./scripts/install-model.sh llama3.1:8b
+
+# Install multiple models
+./scripts/install-models.sh llama3.1:8b codellama:7b mistral:7b
+```
+
+### How do I change the VM size after deployment?
+Modify the `vm_size` in `terraform.tfvars` and run:
+```bash
+cd infra
+terraform apply
+```
+
+### How do I restrict access to specific IP addresses?
+Update the security configuration in `terraform.tfvars`:
+```hcl
+allowed_ssh_cidrs  = ["YOUR_IP/32"]
+allowed_http_cidrs = ["YOUR_NETWORK/24"]
+```
+
+### How do I enable GPU support?
+1. Change to a GPU-capable VM size (e.g., `Standard_NC6s_v3`)
+2. Set `enable_gpu_support = true` in `terraform.tfvars`
+3. Deploy with `./deploy-ollama.sh all`
+
+### How do I deploy to a different Azure region?
+Change the `location` variable in `terraform.tfvars` to any supported Azure region:
+```hcl
+location = "westus2"
+```
+
+### How do I reduce costs?
+1. Use smaller VM sizes (e.g., `Standard_B2s`)
+2. Set `worker_count = 0` for single-node deployment
+3. Use `Standard_LRS` disk type instead of `Premium_LRS`
+4. Use `Basic` SKUs for load balancer and public IPs
+5. Choose lightweight models like `llama3.2:1b`
+
+### How do I increase security?
+1. Restrict CIDR blocks in security configuration
+2. Use `Premium` Key Vault SKU for HSM support
+3. Enable Bastion with `Standard` or `Premium` SKU
+4. Use private networks with appropriate firewall rules
+
+### How do I troubleshoot deployment issues?
+1. Check Terraform logs: `terraform apply` will show detailed error messages
+2. Check Kubernetes pod status: `kubectl get pods -A`
+3. Check pod logs: `kubectl logs -f deployment/ollama-api`
+4. Check Arc connectivity: `az connectedk8s show -n <cluster-name> -g <resource-group>`
+5. Check model installation: `kubectl exec -it deployment/ollama-api -- ollama list`
+
+### How do I monitor resource usage?
+```bash
+# Check node resource usage
+kubectl top nodes
+
+# Check pod resource usage
+kubectl top pods
+
+# Check persistent volumes
+kubectl get pv,pvc
+
+# Check service status
+kubectl get svc -A
+```
+
+### What models are supported?
+The deployment supports any model available on [Ollama's model library](https://ollama.com/search). Popular options include:
+- **General Purpose**: `llama3.1:8b`, `llama3.2:3b`, `mistral:7b`
+- **Code Generation**: `codellama:7b`, `codellama:13b`, `starcoder:7b`
+- **Specialized**: `llava:7b` (vision), `dolphin-mistral:7b` (uncensored)
+- **Lightweight**: `llama3.2:1b`, `tinyllama:1.1b` (for testing)
