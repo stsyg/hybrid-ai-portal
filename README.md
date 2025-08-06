@@ -48,7 +48,7 @@ To run the deployment scripts, you need:
 
 - **Default deployment:**
   - Azure VMs: K3s control plane + workers (optional)
-  - Llama3.2:1b Ollama model deployed by default
+  - Multiple Ollama models can be deployed (configurable via terraform.tfvars)
   - Azure Bastion for SSH access to the VM
   - SSH keys stored in Azure Key Vault
   - K3s managed via Azure Arc (bearer token stored in Key Vault)
@@ -81,6 +81,124 @@ Example of deployed Azure resources in the resource group.
 - **Ollama API** is accessed via `/api/tags`
 - **Web chat** is accessed via `/chat` route
 
+## 🔧 Configuration Options
+
+The deployment can be customized by modifying the `infra/terraform.tfvars` file. Below are all available configuration options:
+
+### Basic Configuration
+| Variable | Description | Default | Example |
+|----------|-------------|---------|---------|
+| `project_name` | Base project name used for all resources | `"js-haip"` | `"my-ai-portal"` |
+| `location` | Azure region for all resources | `"canadacentral"` | `"eastus"` |
+| `admin_username` | Default admin username for VMs | `"azureuser"` | `"admin"` |
+| `worker_count` | Number of K3s worker nodes | `1` | `2` |
+
+### VM and Storage Configuration
+| Variable | Description | Default | Example |
+|----------|-------------|---------|---------|
+| `vm_size` | VM size for all K3s nodes | `"Standard_D4s_v3"` | `"Standard_D8s_v3"` |
+| `vm_disk_size_gb` | OS disk size in GB for K3s VMs | `64` | `128` |
+| `vm_disk_type` | Storage type for VM OS disks | `"Premium_LRS"` | `"Standard_LRS"` |
+| `enable_gpu_support` | Enable GPU support for model inference | `false` | `true` |
+
+### Network Configuration
+| Variable | Description | Default | Example |
+|----------|-------------|---------|---------|
+| `vnet_address_space` | Address space for the virtual network | `["10.0.0.0/16"]` | `["172.16.0.0/16"]` |
+| `subnet_address_prefixes` | Address prefixes for subnets | See example below | See example below |
+| `metallb_ip_range` | IP range for MetalLB load balancer | `"10.0.1.100-10.0.1.110"` | `"172.16.1.50-172.16.1.60"` |
+
+**Subnet Configuration Example:**
+```hcl
+subnet_address_prefixes = {
+  k3s_subnet     = "10.0.1.0/24"
+  bastion_subnet = "10.0.2.0/24"
+}
+```
+
+### Load Balancer Configuration
+| Variable | Description | Default | Example |
+|----------|-------------|---------|---------|
+| `lb_sku` | SKU for Azure Load Balancer | `"Standard"` | `"Basic"` |
+| `public_ip_sku` | SKU for public IP addresses | `"Standard"` | `"Basic"` |
+
+### Bastion Configuration
+| Variable | Description | Default | Example |
+|----------|-------------|---------|---------|
+| `enable_bastion` | Enable Azure Bastion host | `true` | `false` |
+| `bastion_sku` | Bastion SKU | `"Basic"` | `"Standard"` |
+
+### Azure Container Registry Configuration
+| Variable | Description | Default | Example |
+|----------|-------------|---------|---------|
+| `acr_sku` | SKU for Azure Container Registry | `"Basic"` | `"Premium"` |
+
+### Key Vault Configuration
+| Variable | Description | Default | Example |
+|----------|-------------|---------|---------|
+| `kv_sku_name` | SKU name for Azure Key Vault | `"standard"` | `"premium"` |
+| `kv_soft_delete_retention_days` | Soft delete retention period in days | `7` | `30` |
+
+### Security Configuration
+| Variable | Description | Default | Example |
+|----------|-------------|---------|---------|
+| `allowed_ssh_cidrs` | List of CIDR blocks allowed for SSH access | `["0.0.0.0/0"]` | `["192.168.1.0/24"]` |
+| `allowed_http_cidrs` | List of CIDR blocks allowed for HTTP access | `["0.0.0.0/0"]` | `["0.0.0.0/0"]` |
+
+### Model Configuration
+| Variable | Description | Default | Example |
+|----------|-------------|---------|---------|
+| `default_models` | List of LLM models to install by default | `["llama3.2:1b", "llama3.2:3b"]` | `["llama3.1:8b", "codellama:7b"]` |
+
+### Example terraform.tfvars
+
+```hcl
+project_name   = "my-ai-portal"
+location       = "eastus"
+vm_size        = "Standard_D8s_v3"
+admin_username = "azureuser"
+worker_count   = 2
+
+# VM and Storage Configuration
+vm_disk_size_gb = 128
+vm_disk_type    = "Premium_LRS"
+
+# Network Configuration
+vnet_address_space = ["172.16.0.0/16"]
+subnet_address_prefixes = {
+  k3s_subnet     = "172.16.1.0/24"
+  bastion_subnet = "172.16.2.0/24"
+}
+metallb_ip_range = "172.16.1.100-172.16.1.110"
+
+# Load Balancer Configuration
+lb_sku        = "Standard"
+public_ip_sku = "Standard"
+
+# Bastion Configuration
+enable_bastion = true
+bastion_sku    = "Standard"
+
+# Container Registry
+acr_sku = "Premium"
+
+# Key Vault Configuration
+kv_sku_name                   = "premium"
+kv_soft_delete_retention_days = 30
+
+# Security Configuration
+allowed_ssh_cidrs  = ["192.168.1.0/24", "10.0.0.0/8"]
+allowed_http_cidrs = ["0.0.0.0/0"]
+
+# Model Configuration
+default_models = [
+  "llama3.1:8b",
+  "codellama:7b",
+  "mistral:7b"
+]
+enable_gpu_support = true
+```
+
 ---
 
 ## 🌐 Accessing the Portal
@@ -104,6 +222,7 @@ Example of deployed Azure resources in the resource group.
 
 ## 📝 Management
 
+### Kubernetes Resources
 - View pod/service/ingress status:
   ```bash
   kubectl get pods,svc,ingress -A
@@ -116,4 +235,32 @@ Example of deployed Azure resources in the resource group.
 - Scale deployments:
   ```bash
   kubectl scale deployment ollama-chat --replicas=3
+  ```
+
+### Model Management
+- Install additional models:
+  ```bash
+  ./scripts/install-model.sh llama3.1:8b
+  ```
+- Install multiple models:
+  ```bash
+  ./scripts/install-models.sh llama3.1:8b codellama:7b mistral:7b
+  ```
+- List installed models:
+  ```bash
+  kubectl exec -it deployment/ollama-api -- ollama list
+  ```
+- Remove a model:
+  ```bash
+  kubectl exec -it deployment/ollama-api -- ollama rm model-name
+  ```
+- Test models via API:
+  ```bash
+  # List all models
+  curl http://<public_ip>/ollama/api/tags
+  
+  # Test a specific model
+  curl -X POST http://<public_ip>/ollama/api/generate \
+    -H 'Content-Type: application/json' \
+    -d '{"model": "llama3.1:8b", "prompt": "Hello, world!", "stream": false}'
   ```

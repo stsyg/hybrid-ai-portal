@@ -5,7 +5,7 @@ resource "azurerm_virtual_network" "main" {
   name                = "${var.project_name}-vnet-${random_integer.suffix.result}"
   location            = var.location
   resource_group_name = azurerm_resource_group.main.name
-  address_space       = ["10.0.0.0/16"]
+  address_space       = var.vnet_address_space
 
   tags = merge(var.default_tags, { Role = "K3s Network" })
 }
@@ -14,7 +14,7 @@ resource "azurerm_subnet" "main" {
   name                 = "${var.project_name}-subnet-${random_integer.suffix.result}"
   resource_group_name  = azurerm_resource_group.main.name
   virtual_network_name = azurerm_virtual_network.main.name
-  address_prefixes     = ["10.0.1.0/24"]
+  address_prefixes     = [var.subnet_address_prefixes.k3s_subnet]
 
   depends_on = [azurerm_virtual_network.main]
 }
@@ -36,12 +36,24 @@ resource "azurerm_network_security_group" "k3s" {
   resource_group_name = azurerm_resource_group.main.name
 
   security_rule {
+    name                       = "AllowSSH"
+    priority                   = 100
+    direction                  = "Inbound"
+    access                     = "Allow"
+    protocol                   = "Tcp"
+    source_address_prefixes    = var.allowed_ssh_cidrs
+    destination_address_prefix = "*"
+    destination_port_range     = "22"
+    source_port_range          = "*"
+  }
+
+  security_rule {
     name                       = "AllowHTTP"
     priority                   = 200
     direction                  = "Inbound"
     access                     = "Allow"
     protocol                   = "Tcp"
-    source_address_prefix      = "*"
+    source_address_prefixes    = var.allowed_http_cidrs
     destination_address_prefix = "*"
     destination_port_range     = "80"
     source_port_range          = "*"
@@ -53,7 +65,7 @@ resource "azurerm_network_security_group" "k3s" {
     direction                  = "Inbound"
     access                     = "Allow"
     protocol                   = "Tcp"
-    source_address_prefix      = "*"
+    source_address_prefixes    = var.allowed_http_cidrs
     destination_address_prefix = "*"
     destination_port_range     = "443"
     source_port_range          = "*"
@@ -82,7 +94,7 @@ resource "azurerm_public_ip" "k3s_lb" {
   location            = var.location
   resource_group_name = azurerm_resource_group.main.name
   allocation_method   = "Static"
-  sku                 = "Standard"
+  sku                 = var.public_ip_sku
 
   tags = merge(var.default_tags, { Role = "K3s-Control-Plane-PublicIP" })
 }

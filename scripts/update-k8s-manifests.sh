@@ -40,3 +40,13 @@ sed -i "s|image: .*|image: $CHAT_IMAGE_TAG|g" ollama-api/k8s/ollama-chat.yaml
 echo "✅ Updated ollama-chat.yaml with correct ACR image: $CHAT_IMAGE_TAG"
 echo "📝 Image in dollama-api.yaml is now: $CHAT_IMAGE_TAG"
 echo ""
+
+# Update MetalLB configuration with correct IP range
+METALLB_IP_RANGE=$(terraform output -raw metallb_ip_range 2>/dev/null || echo "10.0.1.100-10.0.1.110")
+
+echo "🔄 Updating MetalLB configuration with IP range: $METALLB_IP_RANGE"
+
+sed -i "s|  - .*|  - $METALLB_IP_RANGE|g" ollama-api/k8s/metallb-config.yaml
+
+echo "✅ Updated metallb-config.yaml with IP range: $METALLB_IP_RANGE"
+echo ""
