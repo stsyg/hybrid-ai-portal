@@ -3,9 +3,6 @@
 # Complete deployment script for Ollama API
 set -e
 
-# Set the model name to install (see https://ollama.com/search for available models)
-MODEL_NAME="llama3.2:1b"
-
 # Help/usage output
 if [[ "$1" == "--help" || "$1" == "-h" ]]; then
   echo "Usage: $0 [infra|ollama|destroy|all]"
@@ -191,9 +188,9 @@ if [[ "$1" == "ollama" ]]; then
   fi
   echo "$SEPARATOR"
 
-  # Install default LLM model
-  echo "🤖 Installing default LLM model ($MODEL_NAME)..."
-  ./scripts/install-model.sh "$MODEL_NAME"
+  # Install default LLM models
+  echo "🤖 Installing default LLM models..."
+  ./scripts/install-models.sh
   echo ""
 
   # Final output and test info

@@ -1,0 +1,181 @@
+# Example terraform.tfvars configurations for different use cases
+
+# =============================================================================
+# BASIC CONFIGURATION (Minimal Setup)
+# =============================================================================
+# This is a minimal configuration suitable for development and testing
+# Uncomment and modify as needed
+
+# project_name   = "haip-dev"
+# location       = "eastus"
+# vm_size        = "Standard_B2s"  # Smaller, cheaper VMs
+# admin_username = "azureuser"
+# worker_count   = 0  # Control plane only
+
+# # Basic networking
+# vnet_address_space = ["10.0.0.0/16"]
+# subnet_address_prefixes = {
+#   k3s_subnet     = "10.0.1.0/24"
+#   bastion_subnet = "10.0.2.0/27"
+# }
+# metallb_ip_range = "10.0.1.100-10.0.1.105"
+
+# # Basic security (restrict access)
+# allowed_ssh_cidrs  = ["YOUR_IP_HERE/32"]  # Replace with your IP
+# allowed_http_cidrs = ["0.0.0.0/0"]
+
+# # Single lightweight model
+# default_models = ["llama3.2:1b"]
+
+# =============================================================================
+# PRODUCTION CONFIGURATION (High Performance)
+# =============================================================================
+# This configuration is suitable for production workloads with multiple models
+# Uncomment and modify as needed
+
+# project_name   = "haip-prod"
+# location       = "eastus"
+# vm_size        = "Standard_D8s_v3"  # More powerful VMs
+# admin_username = "azureuser" 
+# worker_count   = 2  # Multiple workers for load distribution
+
+# # VM and Storage Configuration
+# vm_disk_size_gb = 256  # Larger disks for model storage
+# vm_disk_type    = "Premium_LRS"  # Faster SSD storage
+# enable_gpu_support = true  # For GPU-accelerated inference (requires GPU VMs)
+
+# # Network Configuration
+# vnet_address_space = ["172.16.0.0/16"]  # Different IP range
+# subnet_address_prefixes = {
+#   k3s_subnet     = "172.16.1.0/24"
+#   bastion_subnet = "172.16.2.0/27"
+# }
+# metallb_ip_range = "172.16.1.50-172.16.1.70"  # Larger IP pool
+
+# # Load Balancer Configuration
+# lb_sku        = "Standard"
+# public_ip_sku = "Standard"
+
+# # Bastion Configuration
+# enable_bastion = true
+# bastion_sku    = "Standard"  # Better performance
+
+# # Container Registry (for high availability)
+# acr_sku = "Premium"  # Geo-replication support
+
+# # Key Vault Configuration
+# kv_sku_name                   = "premium"  # HSM support
+# kv_soft_delete_retention_days = 30  # Longer retention
+
+# # Security Configuration (Restricted Access)
+# allowed_ssh_cidrs  = ["192.168.1.0/24", "10.0.0.0/8"]  # Corporate networks only
+# allowed_http_cidrs = ["0.0.0.0/0"]  # Public web access
+
+# # Multiple Models for Production
+# default_models = [
+#   "llama3.1:8b",    # General purpose large model
+#   "llama3.2:3b",    # Faster smaller model
+#   "codellama:7b",   # Code generation
+#   "mistral:7b"      # Alternative model
+# ]
+
+# =============================================================================
+# DEVELOPMENT CONFIGURATION (Cost-Optimized)  
+# =============================================================================
+# This configuration minimizes costs while maintaining functionality
+# Uncomment and modify as needed
+
+# project_name   = "haip-dev"
+# location       = "centralus"  # Often cheaper region
+# vm_size        = "Standard_B2ms"  # Burstable VMs for cost savings
+# admin_username = "devuser"
+# worker_count   = 0  # Control plane only to save costs
+
+# # VM and Storage Configuration
+# vm_disk_size_gb = 64  # Minimum required size
+# vm_disk_type    = "Standard_LRS"  # Cheaper storage
+# enable_gpu_support = false  # No GPU to save costs
+
+# # Network Configuration (default ranges)
+# vnet_address_space = ["10.0.0.0/16"]
+# subnet_address_prefixes = {
+#   k3s_subnet     = "10.0.1.0/24"
+#   bastion_subnet = "10.0.2.0/27"
+# }
+# metallb_ip_range = "10.0.1.100-10.0.1.103"  # Minimal IP pool
+
+# # Load Balancer Configuration (Basic tier)
+# lb_sku        = "Basic"  # Cheaper option
+# public_ip_sku = "Basic"  # Cheaper option
+
+# # Bastion Configuration
+# enable_bastion = true
+# bastion_sku    = "Basic"  # Cheaper option
+
+# # Container Registry (Basic tier)
+# acr_sku = "Basic"  # Cheapest option
+
+# # Key Vault Configuration
+# kv_sku_name                   = "standard"
+# kv_soft_delete_retention_days = 7  # Minimum retention
+
+# # Security Configuration
+# allowed_ssh_cidrs  = ["0.0.0.0/0"]  # Open for development (NOT for production)
+# allowed_http_cidrs = ["0.0.0.0/0"]
+
+# # Single lightweight model for development
+# default_models = ["llama3.2:1b"]
+
+# =============================================================================
+# ENTERPRISE CONFIGURATION (Maximum Security & Performance)
+# =============================================================================
+# This configuration provides maximum security and performance
+# Uncomment and modify as needed
+
+# project_name   = "haip-enterprise"
+# location       = "eastus"
+# vm_size        = "Standard_NC6s_v3"  # GPU-enabled VMs
+# admin_username = "azureuser"
+# worker_count   = 3  # High availability
+
+# # VM and Storage Configuration
+# vm_disk_size_gb = 512  # Large storage for multiple models
+# vm_disk_type    = "Premium_LRS"
+# enable_gpu_support = true  # GPU acceleration
+
+# # Network Configuration (Enterprise IP ranges)
+# vnet_address_space = ["192.168.0.0/16"]
+# subnet_address_prefixes = {
+#   k3s_subnet     = "192.168.10.0/24"
+#   bastion_subnet = "192.168.20.0/27"
+# }
+# metallb_ip_range = "192.168.10.100-192.168.10.150"
+
+# # Load Balancer Configuration (Standard tier)
+# lb_sku        = "Standard"
+# public_ip_sku = "Standard"
+
+# # Bastion Configuration
+# enable_bastion = true
+# bastion_sku    = "Premium"  # Advanced features
+
+# # Container Registry (Premium tier)
+# acr_sku = "Premium"  # Geo-replication, advanced security
+
+# # Key Vault Configuration
+# kv_sku_name                   = "premium"  # HSM support
+# kv_soft_delete_retention_days = 90  # Extended retention
+
+# # Security Configuration (Highly Restricted)
+# allowed_ssh_cidrs  = ["10.0.0.0/8"]  # Internal corporate network only
+# allowed_http_cidrs = ["203.0.113.0/24"]  # Specific public IP ranges
+
+# # Comprehensive model selection
+# default_models = [
+#   "llama3.1:70b",   # Largest model for best quality
+#   "llama3.1:8b",    # Medium model for balanced performance
+#   "llama3.2:3b",    # Fast model for quick responses
+#   "codellama:34b",  # Advanced code generation
+#   "mistral:7b",     # Alternative architecture
+#   "vicuna:13b"      # Conversation-optimized
+# ]

@@ -54,3 +54,13 @@ output "k3s_lb_pip_name" {
   description = "The name of the public IP for the K3s load balancer"
   value       = azurerm_public_ip.k3s_lb.name
 }
+
+output "metallb_ip_range" {
+  description = "The IP range configured for MetalLB"
+  value       = var.metallb_ip_range
+}
+
+output "default_models" {
+  description = "The list of default LLM models to install"
+  value       = var.default_models
+}

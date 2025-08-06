@@ -5,7 +5,7 @@ resource "azurerm_lb" "k3s_public" {
   name                = "${var.project_name}-k3s-lb"
   location            = var.location
   resource_group_name = azurerm_resource_group.main.name
-  sku                 = "Standard"
+  sku                 = var.lb_sku
 
   frontend_ip_configuration {
     name                 = "PublicIPAddress"

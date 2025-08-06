@@ -63,7 +63,8 @@ resource "azurerm_linux_virtual_machine" "k3s_cp" {
 
   os_disk {
     caching              = "ReadWrite"
-    storage_account_type = "Standard_LRS"
+    storage_account_type = var.vm_disk_type
+    disk_size_gb         = var.vm_disk_size_gb
   }
 
   source_image_reference {
@@ -143,7 +144,8 @@ resource "azurerm_linux_virtual_machine" "k3s_worker" {
 
   os_disk {
     caching              = "ReadWrite"
-    storage_account_type = "Standard_LRS"
+    storage_account_type = var.vm_disk_type
+    disk_size_gb         = var.vm_disk_size_gb
   }
 
   source_image_reference {
